@@ -498,7 +498,6 @@ async def spty(ctx, member: discord.Member = None):
     embed.add_field(name="🎤 Sanatçı", value=", ".join(sp.artists))
     embed.set_thumbnail(url=sp.album_cover_url)
     await ctx.send(embed=embed)
-
 @bot.command()
 async def yardim(ctx):
     embed = discord.Embed(title="🌸 Bot Menüsü 🌸", description=f"Merhaba {ctx.author.mention}!", color=discord.Color.gold())
@@ -508,6 +507,5 @@ async def yardim(ctx):
     embed.add_field(name="ℹ️ Bilgi", value="`spty`, `kullanici`, `sunucu`", inline=False)
     await ctx.send(embed=embed)
 
-# Token güvenliği için Render Çevre Değişkenini okuyoruz
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
-    
+
