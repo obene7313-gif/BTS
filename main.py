@@ -94,9 +94,6 @@ async def on_message(message):
         if zar <= 2:
         benzersiz_iltifat = random.choice(iltifatlar)
         await message.channel.send(f"{message.author.mention} {benzersiz_iltifat}")
-            
-        
-        await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
     elif zar > 2 and zar <= 10:
         soru, cevap = matematik_sorusu_uret()
         await message.channel.send(f"🧠 **Hızlı Soru!** {message.author.mention}, cevap nedir?\n👉 `{soru}` (15 saniyen var!)")
