@@ -91,9 +91,10 @@ async def on_message(message):
 
             # %2 ihtimalle rastgele iltifat gönderir
     zar = random.randint(1, 100)
-    if zar <= 2:
+        if zar <= 2:
         benzersiz_iltifat = random.choice(iltifatlar)
         await message.channel.send(f"{message.author.mention} {benzersiz_iltifat}")
+            
         
         await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
     elif zar > 2 and zar <= 10:
@@ -116,7 +117,8 @@ async def on_message(message):
 async def on_member_join(member):
     if sunucu_ayarlari["giris_cikis_kanali"]:
         ch = bot.get_channel(sunucu_ayarlari["giris_cikis_kanali"])
-        if ch: await ch.send(f"{random.choice(selamlamalar)} {member.mention}! 🥳")
+if ch: await ch.send(f"{random.choice(selam_cevaplari)} {member.mention}! 🥳")
+    
 
 @bot.event
 async def on_member_remove(member):
