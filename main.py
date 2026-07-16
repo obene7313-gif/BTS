@@ -94,7 +94,7 @@ async def on_message(message):
             except:
                 pass
 
-    # %2 ihtimalle rastgele iltifat gönderir
+    # %2 ihtimalle rastgele iltifat gönderir, %8 ihtimalle matematik sorusu sorar
     zar = random.randint(1, 100)
     if zar <= 2:
         benzersiz_iltifat = random.choice(iltifatlar)
@@ -107,7 +107,7 @@ async def on_message(message):
         try:
             cevap_mesaj = await bot.wait_for('message', check=check, timeout=15.0)
             if cevap_mesaj.content.strip() == cevap:
-                ekonomi_cuzdan[message.author.id] = ekonomi_cuzdan.get(message.author.id, 0) + 50
+                ekonomi_cuzdan[message.author.id] = ekonomi_cuzdan.get(message.author.id, 100) + 50
                 await message.channel.send(f"🎉 Doğru cevap {message.author.mention}! **50 BTS Parası** kazandın! 💰")
             else:
                 await message.channel.send(f"❌ Yanlış cevap! Doğru yanıt `{cevap}` olmalıydı.")
@@ -370,7 +370,7 @@ async def yardim(ctx):
     embed.add_field(name="🎮 Eğlence & Aksiyon", value="`slaps`, `kiss`, `sarıl`, `ship`, `ship2`, `askolcer`, `efkarolcer`, `sanslisayi`, `para`, `slots`, `spty`", inline=False)
     await ctx.send(embed=embed)
 
-# Render veya diğer hosting servislerinde güvenle çalışması için Token'ı Environment'tan çekiyoruz
+# Token güvenliği için
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 bot.run(TOKEN)
     
