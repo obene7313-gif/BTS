@@ -266,8 +266,6 @@ iltifatlar = [
     "Adeta bir masal diyarından gelmiş gibisin, büyülü bir auran var! 🧚‍♀️✨",
     "Senin varlığın bu sunucunun kazandığı en büyük ve en güzel ödül! 🏆🎉",
     "Her zaman en ince düşünceleri bulup çıkarmayı nasıl başarıyorsun? 📝🌸",
-
-kadar keyifli! ☁️🚶‍♀️",
     "Her zaman en doğru yerde en tatlı kelimeyi söylemeyi nasıl beceriyorsun? 📝🧁",
     "Senin o çocuksu heyecanın dünyadaki her şeyi güzelleştirebilir! 🦸‍♀️🍭",
     "Sözlerinle yaralara merhem olan o şifa dolu kalbini çok seviyoruz. 🩹❤️",
