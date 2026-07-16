@@ -364,13 +364,19 @@ async def ship2(ctx, member: discord.Member = None):
 
 @bot.command()
 async def yardim(ctx):
-    embed = discord.Embed(title="🌸 Bot Komut Menüsü 🌸", color=discord.Color.gold())
-    embed.add_field(name="🛡️ Filtreler", value="`Kürür`, `Reklam`, `Spam`, `SA-AS`", inline=False)
-    embed.add_field(name="⚙️ Ayarlar", value="`ayarlar`, `kufurengel`, `reklamengel`, `spamengel`, `logayarla`, `hosgeldin-ve-baybay-ayarla`", inline=False)
-    embed.add_field(name="🎮 Eğlence & Aksiyon", value="`slaps`, `kiss`, `sarıl`, `ship`, `ship2`, `askolcer`, `efkarolcer`, `sanslisayi`, `para`, `slots`, `spty`", inline=False)
+    embed = discord.Embed(
+        title="🌸 Bot Komut Menüsü 🌸", 
+        description=f"Merhaba {ctx.author.mention}! Sana yardımcı olmak için buradayım. ✨ İşte kullanabileceğin tüm komutlar:", 
+        color=discord.Color.gold()
+    )
+    embed.add_field(name="🛡️ Filtreler", value="`kufurengel`, `reklamengel`, `spamengel`, `karaliste`", inline=False)
+    embed.add_field(name="⚙️ Sunucu Ayarları", value="`ayarlar`, `logayarla`, `hosgeldin-ve-baybay-ayarla`", inline=False)
+    embed.add_field(name="🎮 Eğlence & Aksiyon", value="`slaps`, `kiss`, `sarıl`, `ship`, `ship2`, `askolcer`, `efkarolcer`, `sanslisayi`", inline=False)
+    embed.add_field(name="💰 Ekonomi", value="`para`, `slots`", inline=False)
+    embed.add_field(name="ℹ️ Bilgi Komutları", value="`spty`, `kullanici`, `sunucu`", inline=False)
+    embed.set_footer(text="Gönlünüzce eğlenmeniz dileğiyle! 💕")
     await ctx.send(embed=embed)
 
 # Token güvenliği için
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 bot.run(TOKEN)
-    
