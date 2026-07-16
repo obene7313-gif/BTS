@@ -61,7 +61,7 @@ async def on_message(message):
                     if sunucu_ayarlari["log_kanali"]:
                         log_ch = bot.get_channel(sunucu_ayarlari["log_kanali"])
                         if log_ch: 
-                            await log_ch.send(f"🛡️ **Küfür Engellendi:** {message.author.tag} -> `{message.content}`")
+                            await log_ch.send(f"🛡️ **Küfür Engellendi:** {message.author.name} -> `{message.content}`")
                 except:
                     pass
                 return
@@ -74,7 +74,7 @@ async def on_message(message):
                 if sunucu_ayarlari["log_kanali"]:
                     log_ch = bot.get_channel(sunucu_ayarlari["log_kanali"])
                     if log_ch: 
-                        await log_ch.send(f"🛡️ **Reklam Engellendi:** {message.author.tag} -> `{message.content}`")
+                        await log_ch.send(f"🛡️ **Reklam Engellendi:** {message.author.name} -> `{message.content}`")
             except:
                 pass
             return
@@ -128,7 +128,7 @@ async def on_member_remove(member):
     if sunucu_ayarlari["giris_cikis_kanali"]:
         ch = bot.get_channel(sunucu_ayarlari["giris_cikis_kanali"])
         if ch: 
-            await ch.send(f"👋 `{member.tag}` sunucudan ayrıldı. 😔")
+            await ch.send(f"👋 `{member.name}` sunucudan ayrıldı. 😔")
 
 def yetkili_kontrol():
     async def predicate(ctx): 
@@ -238,13 +238,13 @@ async def rolal(ctx, member: discord.Member, role: discord.Role):
 @yetkili_kontrol()
 async def ban(ctx, member: discord.Member, *, sebep="Yok"):
     await member.ban(reason=sebep)
-    await ctx.send(f"🚫 {member.tag} banlandı.")
+    await ctx.send(f"🚫 {member.name} banlandı.")
 
 @bot.command()
 @yetkili_kontrol()
 async def kick(ctx, member: discord.Member, *, sebep="Yok"):
     await member.kick(reason=sebep)
-    await ctx.send(f"👢 {member.tag} atıldı.")
+    await ctx.send(f"👢 {member.name} atıldı.")
 
 @bot.command()
 @yetkili_kontrol()
@@ -327,7 +327,7 @@ hug_gifs = ["https://media.giphy.com/media/142te9HA8mMKs/giphy.gif"]
 async def slaps(ctx, member: discord.Member = None):
     if not member:
         return await ctx.send("⚠️ Lütfen tokatlamak istediğin birini etiketle!")
-    embed = discord.Embed(description=f"💥 {ctx.author.mention}, {member.mention} kullanıcısına tokat attı!")
+    embed = discord.Embed(description=f"💥 {ctx.author.mention}, {member.mention} kullanıcısına tokat aldı!")
     embed.set_image(url=random.choice(slap_gifs))
     await ctx.send(embed=embed)
 
@@ -377,6 +377,7 @@ async def yardim(ctx):
     embed.set_footer(text="Gönlünüzce eğlenmeniz dileğiyle! 💕")
     await ctx.send(embed=embed)
 
-# Token güvenliği için
+# Token güvenliği için (Render Env Variables ile uyumlu)
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 bot.run(TOKEN)
+                                             
