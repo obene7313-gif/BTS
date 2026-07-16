@@ -6,7 +6,8 @@ from datetime import timedelta, datetime
 import os
 
 # Yan taraftaki dosyadan iltifatları ve selamlamaları çekiyoruz (GitHub'a sığma sorunu çözüldü!)
-from iltifatlar import iltifatlar, selamlamalar
+from iltifatlar import iltifatlar, selam_cevaplari
+
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -88,8 +89,12 @@ async def on_message(message):
                 return
             except: pass
 
+            # %2 ihtimalle rastgele iltifat gönderir
     zar = random.randint(1, 100)
     if zar <= 2:
+        benzersiz_iltifat = random.choice(iltifatlar)
+        await message.channel.send(f"{message.author.mention} {benzersiz_iltifat}")
+        
         await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
     elif zar > 2 and zar <= 10:
         soru, cevap = matematik_sorusu_uret()
