@@ -5,9 +5,8 @@ import asyncio
 from datetime import timedelta, datetime
 import os
 
-# Yan taraftaki dosyadan iltifatları ve selamlamaları çekiyoruz (GitHub'a sığma sorunu çözüldü!)
+# Yan taraftaki dosyadan iltifatları ve selamlamaları çekiyoruz
 from iltifatlar import iltifatlar, selam_cevaplari
-
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -61,8 +60,10 @@ async def on_message(message):
                     await message.channel.send(f"⚠️ {message.author.mention}, lütfen kelimelerimize dikkat edelim!", delete_after=5)
                     if sunucu_ayarlari["log_kanali"]:
                         log_ch = bot.get_channel(sunucu_ayarlari["log_kanali"])
-                        if log_ch: await log_ch.send(f"🛡️ **Küfür Engellendi:** {message.author.tag} -> `{message.content}`")
-                except: pass
+                        if log_ch: 
+                            await log_ch.send(f"🛡️ **Küfür Engellendi:** {message.author.tag} -> `{message.content}`")
+                except:
+                    pass
                 return
 
     if sunucu_ayarlari["reklam_filtresi"]:
@@ -72,14 +73,17 @@ async def on_message(message):
                 await message.channel.send(f"⚠️ {message.author.mention}, bu sunucuda reklam yapmak yasaktır!", delete_after=5)
                 if sunucu_ayarlari["log_kanali"]:
                     log_ch = bot.get_channel(sunucu_ayarlari["log_kanali"])
-                    if log_ch: await log_ch.send(f"🛡️ **Reklam Engellendi:** {message.author.tag} -> `{message.content}`")
-            except: pass
+                    if log_ch: 
+                        await log_ch.send(f"🛡️ **Reklam Engellendi:** {message.author.tag} -> `{message.content}`")
+            except:
+                pass
             return
 
     if sunucu_ayarlari["spam_filtresi"]:
         now = datetime.utcnow()
         user_id = message.author.id
-        if user_id not in spam_takip: spam_takip[user_id] = []
+        if user_id not in spam_takip: 
+            spam_takip[user_id] = []
         spam_takip[user_id].append(now)
         spam_takip[user_id] = [t for t in spam_takip[user_id] if (now - t).total_seconds() <= 3]
         if len(spam_takip[user_id]) > 4:
@@ -87,17 +91,19 @@ async def on_message(message):
                 await message.delete()
                 await message.channel.send(f"⚠️ {message.author.mention}, lütfen spam yapma.", delete_after=5)
                 return
-            except: pass
+            except:
+                pass
 
-            # %2 ihtimalle rastgele iltifat gönderir
+    # %2 ihtimalle rastgele iltifat gönderir
     zar = random.randint(1, 100)
-        if zar <= 2:
+    if zar <= 2:
         benzersiz_iltifat = random.choice(iltifatlar)
         await message.channel.send(f"{message.author.mention} {benzersiz_iltifat}")
     elif zar > 2 and zar <= 10:
         soru, cevap = matematik_sorusu_uret()
         await message.channel.send(f"🧠 **Hızlı Soru!** {message.author.mention}, cevap nedir?\n👉 `{soru}` (15 saniyen var!)")
-        def check(m): return m.author == message.author and m.channel == message.channel
+        def check(m): 
+            return m.author == message.author and m.channel == message.channel
         try:
             cevap_mesaj = await bot.wait_for('message', check=check, timeout=15.0)
             if cevap_mesaj.content.strip() == cevap:
@@ -114,17 +120,19 @@ async def on_message(message):
 async def on_member_join(member):
     if sunucu_ayarlari["giris_cikis_kanali"]:
         ch = bot.get_channel(sunucu_ayarlari["giris_cikis_kanali"])
-if ch: await ch.send(f"{random.choice(selam_cevaplari)} {member.mention}! 🥳")
-    
+        if ch: 
+            await ch.send(f"{random.choice(selam_cevaplari)} {member.mention}! 🥳")
 
 @bot.event
 async def on_member_remove(member):
     if sunucu_ayarlari["giris_cikis_kanali"]:
         ch = bot.get_channel(sunucu_ayarlari["giris_cikis_kanali"])
-        if ch: await ch.send(f"👋 `{member.tag}` sunucudan ayrıldı. 😔")
+        if ch: 
+            await ch.send(f"👋 `{member.tag}` sunucudan ayrıldı. 😔")
 
 def yetkili_kontrol():
-    async def predicate(ctx): return ctx.author.guild_permissions.administrator
+    async def predicate(ctx): 
+        return ctx.author.guild_permissions.administrator
     return commands.check(predicate)
 
 @bot.command()
@@ -158,15 +166,15 @@ async def spamengel(ctx):
 @yetkili_kontrol()
 async def logayarla(ctx, channel: discord.TextChannel):
     sunucu_ayarlari["log_kanali"] = channel.id
-    await ctx.send(f"📜 Log kanalı {channel.mention} yapıldı.")
+    await ctx.send(f"📁 Log kanalı {channel.mention} yapıldı.")
 
 @bot.command(name="hosgeldin-ve-baybay-ayarla")
 @yetkili_kontrol()
 async def hosgeldin_baybay_ayarla(ctx, channel: discord.TextChannel):
     sunucu_ayarlari["giris_cikis_kanali"] = channel.id
-    await ctx.send(f"👋 Giriş-Çıkış kanalı {channel.mention} yapıldı.")
+    await ctx.send(f"✨ Giriş-Çıkış kanalı {channel.mention} yapıldı.")
 
-@bot.group(invoke_without_command=True)
+@bot.command()
 @yetkili_kontrol()
 async def karaliste(ctx):
     await ctx.send(f"🚫 Yasaklı Kelimeler: {', '.join(yasakli_kelimeler) if yasakli_kelimeler else 'Boş.'}")
@@ -195,7 +203,9 @@ async def sil(ctx, sayi: int):
 async def sustur(ctx, member: discord.Member, sure: str):
     birim = sure[-1]
     deger = int(sure[:-1])
-    dt = timedelta(minutes=deger) if birim=='m' else timedelta(hours=deger) if birim=='h' else timedelta(days=deger)
+    if birim == 'm': dt = timedelta(minutes=deger)
+    elif birim == 'h': dt = timedelta(hours=deger)
+    else: dt = timedelta(days=deger)
     await member.timeout(dt)
     await ctx.send(f"🔇 {member.mention} {sure} susturuldu.")
 
@@ -208,7 +218,7 @@ async def ac(ctx, member: discord.Member):
 @bot.command()
 @yetkili_kontrol()
 async def nuke(ctx):
-    ch = await ctx.guild.create_text_channel(name=ctx.channel.name, category=ctx.channel.category, topic=ctx.channel.topic, overwrites=ctx.channel.overwrites)
+    ch = await ctx.guild.create_text_channel(name=ctx.channel.name, category=ctx.channel.category, topic=ctx.channel.topic)
     await ctx.channel.delete()
     await ch.send("💥 **Kanal Sıfırlandı (Nuke)!** ✨")
 
@@ -256,9 +266,10 @@ async def para(ctx, member: discord.Member = None):
 @bot.command()
 async def slots(ctx, miktar: int):
     c = ekonomi_cuzdan.get(ctx.author.id, 100)
-    if miktar <= 0 or miktar > c: return await ctx.send("❌ Bakiye yetersiz!")
-    res = [random.choice(["🍒", "🍇", "🍋", "💎", "🔔"]) for _ in range(3)]
-    sonuc = f"┃ {res[0]} ┃ {res[1]} ┃ {res[2]} ┃"
+    if miktar <= 0 or miktar > c: 
+        return await ctx.send("❌ Bakiye yetersiz!")
+    res = [random.choice(["🍒", "🍇", "🍋", "🍊", "🍉"]) for _ in range(3)]
+    sonuc = f" | {res[0]} | {res[1]} | {res[2]} | "
     if res[0] == res[1] == res[2]:
         ekonomi_cuzdan[ctx.author.id] = c + (miktar * 3)
         await ctx.send(f"{sonuc}\n🎉 3'te 3! Üç katı kazandın!")
@@ -273,7 +284,8 @@ async def slots(ctx, miktar: int):
 async def spty(ctx, member: discord.Member = None):
     h = member or ctx.author
     sp = next((a for a in h.activities if isinstance(a, discord.Spotify)), None)
-    if not sp: return await ctx.send("🎵 Spotify dinlemiyor.")
+    if not sp: 
+        return await ctx.send("🎵 Spotify dinlemiyor.")
     embed = discord.Embed(title=f"🎧 {h.name} Spotify", color=discord.Color.green())
     embed.add_field(name="🎵 Şarkı", value=sp.title)
     embed.add_field(name="🎤 Sanatçı", value=", ".join(sp.artists))
@@ -297,7 +309,7 @@ async def sunucu(ctx):
 @bot.command()
 async def askolcer(ctx, member: discord.Member):
     o = random.randint(0, 100)
-    await ctx.send(f"💘 {ctx.author.mention} x {member.mention} -> **%{o}**")
+    await ctx.send(f"❤️ {ctx.author.mention} x {member.mention} -> **%{o}**")
 
 @bot.command()
 async def efkarolcer(ctx):
@@ -307,47 +319,58 @@ async def efkarolcer(ctx):
 async def sanslisayi(ctx):
     await ctx.send(f"🍀 {ctx.author.mention} şanslı sayın: **{random.randint(1, 100)}**")
 
-slap_gifs = ["https://media.giphy.com/media/Gf3AUz3eBNbTW/giphy.gif"]
+slap_gifs = ["https://media.giphy.com/media/Gf3Aut3eBNbTw/giphy.gif"]
 kiss_gifs = ["https://media.giphy.com/media/G3va31WUtFxQI/giphy.gif"]
 hug_gifs = ["https://media.giphy.com/media/142te9HA8mMKs/giphy.gif"]
 
 @bot.command()
-async def slaps(ctx, member: discord.Member):
-    e = discord.Embed(description=f"💥 {ctx.author.mention}, {member.mention} kullanıcısına tokat attı!")
-    e.set_image(url=random.choice(slap_gifs))
-    await ctx.send(embed=e)
+async def slaps(ctx, member: discord.Member = None):
+    if not member:
+        return await ctx.send("⚠️ Lütfen tokatlamak istediğin birini etiketle!")
+    embed = discord.Embed(description=f"💥 {ctx.author.mention}, {member.mention} kullanıcısına tokat attı!")
+    embed.set_image(url=random.choice(slap_gifs))
+    await ctx.send(embed=embed)
 
 @bot.command()
-async def kiss(ctx, member: discord.Member):
-    e = discord.Embed(description=f"💋 {ctx.author.mention}, {member.mention} kullanıcısını öptü!")
-    e.set_image(url=random.choice(kiss_gifs))
-    await ctx.send(embed=e)
+async def kiss(ctx, member: discord.Member = None):
+    if not member:
+        return await ctx.send("⚠️ Lütfen öpmek istediğin birini etiketle!")
+    embed = discord.Embed(description=f"💋 {ctx.author.mention}, {member.mention} kullanıcısını öptü!")
+    embed.set_image(url=random.choice(kiss_gifs))
+    await ctx.send(embed=embed)
 
 @bot.command()
-async def sarıl(ctx, member: discord.Member):
-    e = discord.Embed(description=f"🤗 {ctx.author.mention}, {member.mention} kullanıcısına sarıldı!")
-    e.set_image(url=random.choice(hug_gifs))
-    await ctx.send(embed=e) # <--- HATA DÜZELTİLDİ, EKSİK PARÇA TAMAMLANDI!
+async def sarıl(ctx, member: discord.Member = None):
+    if not member:
+        return await ctx.send("⚠️ Lütfen sarılmak istediğin birini etiketle!")
+    embed = discord.Embed(description=f"🤗 {ctx.author.mention}, {member.mention} kullanıcısına sarıldı!")
+    embed.set_image(url=random.choice(hug_gifs))
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def ship(ctx):
     uyeler = [m for m in ctx.guild.members if not m.bot and m != ctx.author]
-    if not uyeler: return await ctx.send("❌ Kimse yok.")
+    if not uyeler:
+        return await ctx.send("❌ Shiplemek için sunucuda başka kimse yok.")
     sec = random.choice(uyeler)
-    await ctx.send(f"🔮 💞 {ctx.author.mention} x {sec.mention} -> **%{random.randint(10, 100)}** ✨⭐")
+    sec_oran = random.randint(10, 100)
+    await ctx.send(f"💞 {ctx.author.mention} x {sec.mention} -> **%{sec_oran}** ✨⭐")
 
 @bot.command(name="ship2")
-async def ship2(ctx, member: discord.Member):
-    await ctx.send(f"🔮 💞 {ctx.author.mention} x {member.mention}\n**Oran: %99999** 🔥\n🌟 ✨ **BU AŞK ÖLÇÜLEMEZ!** ✨ 🌟")
+async def ship2(ctx, member: discord.Member = None):
+    if not member:
+        return await ctx.send("⚠️ Lütfen shiplemek istediğin bir üyeyi etiketle!")
+    await ctx.send(f"💞 {ctx.author.mention} x {member.mention}\n**Oran: %99999** 🔥\n✨🌟 **BU AŞK ÖLÇÜLEMEZ!** 🌟✨")
 
 @bot.command()
 async def yardim(ctx):
     embed = discord.Embed(title="🌸 Bot Komut Menüsü 🌸", color=discord.Color.gold())
-    embed.add_field(name="🛡️ Filtreler", value="`Küfür`, `Reklam`, `Spam`, `SA-AS`", inline=False)
-    embed.add_field(name="⚙️ Ayarlar", value="`!ayarlar`, `!kufurengel`, `!reklamengel`, `!spamengel`, `!logayarla`", inline=False)
-    embed.add_field(name="🎬 Eğlence & Aksiyon", value="`!slaps`, `!kiss`, `!sarıl`, `!ship`, `!ship2`, `!yardim`", inline=False)
+    embed.add_field(name="🛡️ Filtreler", value="`Kürür`, `Reklam`, `Spam`, `SA-AS`", inline=False)
+    embed.add_field(name="⚙️ Ayarlar", value="`ayarlar`, `kufurengel`, `reklamengel`, `spamengel`, `logayarla`, `hosgeldin-ve-baybay-ayarla`", inline=False)
+    embed.add_field(name="🎮 Eğlence & Aksiyon", value="`slaps`, `kiss`, `sarıl`, `ship`, `ship2`, `askolcer`, `efkarolcer`, `sanslisayi`, `para`, `slots`, `spty`", inline=False)
     await ctx.send(embed=embed)
 
-# Render'da güvenle çalışması için Token'ı Environment'tan çekiyoruz
+# Render veya diğer hosting servislerinde güvenle çalışması için Token'ı Environment'tan çekiyoruz
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 bot.run(TOKEN)
+    
