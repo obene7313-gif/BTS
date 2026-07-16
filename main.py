@@ -2,464 +2,348 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
-from datetime import timedelta
+from datetime import timedelta, datetime
 import os
-from threading import Thread
-from flask import Flask
-import string
 
-# --- 🌐 7/24 AKTİF KALMA (WEB SERVER) SİSTEMİ ---
-app = Flask('')
+# Yan taraftaki dosyadan iltifatları ve selamlamaları çekiyoruz (GitHub'a sığma sorunu çözüldü!)
+from iltifatlar import iltifatlar, selamlamalar
 
-@app.route('/')
-def home():
-    return "Bot 7/24 Aktif!"
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+intents.presences = True
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-# ------------------------------------------------
+sunucu_ayarlari = {
+    "kufur_filtresi": False,
+    "reklam_filtresi": False,
+    "spam_filtresi": False,
+    "log_kanali": None,
+    "giris_cikis_kanali": None
+}
 
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='!', intents=intents)
+yasakli_kelimeler = ["küfür1", "küfür2", "argo1"]
+ekonomi_cuzdan = {}
+spam_takip = {}
 
-kara_liste = ["salak", "aptal", "gerizekali"] 
+def matematik_sorusu_uret():
+    tipler = ['toplama', 'cikarma', 'carpma', 'us']
+    secilen = random.choice(tipler)
+    if secilen == 'toplama':
+        a, b = random.randint(100, 999), random.randint(100, 999)
+        return f"{a}+{b}", str(a + b)
+    elif secilen == 'cikarma':
+        a, b = random.randint(100, 999), random.randint(10, 99)
+        return f"{a}-{b}", str(a - b)
+    elif secilen == 'carpma':
+        a, b = random.randint(5, 15), random.randint(6, 9)
+        return f"{a}*{b}", str(a * b)
+    elif secilen == 'us':
+        a = random.choice([11, 12, 13, 14, 15, 20, 25])
+        return f"{a}^2", str(a ** 2)
 
-kufur_filtresi_aktif = False
-reklam_filtresi_aktif = False
-spam_filtresi_aktif = False
-hosgeldin_kanali_id = None
-log_kanali_id = None
-kullanici_mesajlari = {}
-
-# --- 💰 EKONOMİ & SORU SİSTEMİ VERİLERİ ---
-bts_paralari = {}  # {kullanici_id: miktar}
-aktif_soru_cevap = None  # {"soru": "...", "cevap": "..."}
-aktif_soru_kanali = None
-sorulan_sorular = []  # Aynı soruların üst üste gelmesini engellemek için havuz
-
-# Genel Kültür ve Kolay Matematik Soruları
-soru_havuzu = [
-    # Genel Kültür Soruları
-    {"soru": "Gökyüzünün rengi genellikle hangi renktir?", "cevap": "mavi"},
-    {"soru": "Türkiye'nin başkenti neresidir?", "cevap": "ankara"},
-    {"soru": "Haftanın ilk günü hangisidir?", "cevap": "pazartesi"},
-    {"soru": "Geceleri gökyüzünde parlayan en büyük doğal uydumuz nedir?", "cevap": "ay"},
-    {"soru": "Karagöz ile kim sürekli atışır?", "cevap": "hacivat"},
-    {"soru": "Ispanak yiyerek güçlenen ünlü çizgi film karakteri kimdir?", "cevap": "temel reis"},
-    {"soru": "Gökkuşağında toplam kaç renk vardır? (Sadece sayı yazın)", "cevap": "7"},
-    {"soru": "Futbolda bir takım sahaya kaç oyuncuyla çıkar? (Sadece sayı yazın)", "cevap": "11"},
-    {"soru": "Suyun donma noktası kaç derecedir? (Sadece sayı yazın)", "cevap": "0"},
-    {"soru": "Kırmızı ve sarı renk karışınca hangi renk oluşur?", "cevap": "turuncu"},
-
-    # Kolay Matematik Soruları
-    {"soru": "Hızlıca Çöz! ⚡\n**15 + 15 kaçtır?**", "cevap": "30"},
-    {"soru": "Hızlıca Çöz! ⚡\n**10 x 5 kaçtır?**", "cevap": "50"},
-    {"soru": "Hızlıca Çöz! ⚡\n**50 / 2 kaçtır?**", "cevap": "25"},
-    {"soru": "Hızlıca Çöz! ⚡\n**100 - 40 kaçtır?**", "cevap": "60"},
-    {"soru": "Hızlıca Çöz! ⚡\n**3 x 3 kaçtır?**", "cevap": "9"},
-    {"soru": "Hızlıca Çöz! ⚡\n**20 + 8 - 5 kaçtır?**", "cevap": "23"},
-    {"soru": "Hızlıca Çöz! ⚡\n**40'ın yarısı kaçtır?**", "cevap": "20"},
-    {"soru": "Hızlıca Çöz! ⚡\n**2 x 10 + 5 kaçtır?**", "cevap": "25"}
-]
-
-# Çok Daha Geniş ve Samimi İltifat Havuzu
-iltifatlar = [
-    "Ya senin bu tatlılığın ne olacak? Sunucuya neşe saçıyorsun resmen! ✨",
-    "Mesajını gördüm de, parmaklarından bal damlıyor sanki... 🥰",
-    "Sen yazınca bu kanal bir başka güzel oluyor, hep yaz sen! 🌸",
-    "Kalbinin güzelliği attığın mesajlara yansımış resmen, harikasın! 💜",
-    "Bu sunucunun en parlak yıldızı kesinlikle sensin! ⭐",
-    "Seninle sohbet etmek, kahvenin yanındaki o en tatlı çikolata gibi! 🍫",
-    "Enerjin o kadar güzel ki, buradaki herkesi istemsizce gülümsetiyorsun. 😊",
-    "Kelimelerinle resmen etrafa ışık saçıyorsun, iyi ki varsın! 🌟",
-    "Bugün harika görünüyorsun (evet, bunu hissettim)! 😉",
-    "Şu tatlılığa bak ya, bot halimle bana bile neşe verdin! 💕"
-]
-
-@bot.event
-async def on_ready():
-    print(f'Bot {bot.user.name} olarak başarıyla giriş yaptı!')
-
-# --- 📥 HOŞ GELDİN & 📤 GÜLE GÜLE SİSTEMİ ---
-@bot.event
-async def on_member_join(member):
-    global hosgeldin_kanali_id
-    if hosgeldin_kanali_id:
-        kanal = bot.get_channel(hosgeldin_kanali_id)
-        if kanal:
-            embed = discord.Embed(
-                title="🌸 Aramıza Yeni Biri Katıldı!", 
-                description=f"Hoş geldin {member.mention}! Sunucumuza neşe getirdin. ✨\nSeninle birlikte **{member.guild.member_count}** kişi olduk! 🎉", 
-                color=discord.Color.from_rgb(255, 182, 193)
-            )
-            embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
-            await kanal.send(embed=embed)
-
-@bot.event
-async def on_member_remove(member):
-    global hosgeldin_kanali_id
-    if hosgeldin_kanali_id:
-        kanal = bot.get_channel(hosgeldin_kanali_id)
-        if kanal:
-            embed = discord.Embed(
-                title="💔 Aramızdan Biri Ayrıldı...", 
-                description=f"Güle güle {member.name}... Gidişin bizi üzdü. 😔\nŞu an sunucuda **{member.guild.member_count}** kişi kaldık.", 
-                color=discord.Color.dark_gray()
-            )
-            embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
-            await kanal.send(embed=embed)
-
-# --- 🛡️ MESAJ KONTROLLERİ (KORUMA, OYUN VE İLTİFAT SİSTEMLERİ) ---
 @bot.event
 async def on_message(message):
-    if message.author.bot or not message.guild:
+    if message.author.bot:
         return
 
-    global kufur_filtresi_aktif, reklam_filtresi_aktif, spam_filtresi_aktif, kara_liste, aktif_soru_cevap, aktif_soru_kanali, sorulan_sorular
-    mesaj_silindi = False
-
-    # 💬 SA-AS SİSTEMİ
     if message.content.lower() == "sa":
-        await message.channel.send(f"Aleyküm Selam, hoş geldin {message.author.mention}! 😊")
+        await message.channel.send(f"Aleyküm Selam {message.author.mention}, hoş geldin! 🌸✨")
         return
 
-    # 👑 OYUN CEVAP KONTROLÜ
-    if aktif_soru_cevap and message.channel.id == aktif_soru_kanali:
-        if message.content.lower().strip() == aktif_soru_cevap["cevap"]:
-            u_id = message.author.id
-            bts_paralari[u_id] = bts_paralari.get(u_id, 0) + 100
-            await message.channel.send(f"🎉 Tebrikler {message.author.mention}! Doğru cevabı verdin ve **100 BTS Parası** kazandın! 💰")
-            aktif_soru_cevap = None
-            aktif_soru_kanali = None
+    if sunucu_ayarlari["kufur_filtresi"]:
+        for kelime in yasakli_kelimeler:
+            if kelime in message.content.lower():
+                try:
+                    await message.delete()
+                    await message.channel.send(f"⚠️ {message.author.mention}, lütfen kelimelerimize dikkat edelim!", delete_after=5)
+                    if sunucu_ayarlari["log_kanali"]:
+                        log_ch = bot.get_channel(sunucu_ayarlari["log_kanali"])
+                        if log_ch: await log_ch.send(f"🛡️ **Küfür Engellendi:** {message.author.tag} -> `{message.content}`")
+                except: pass
+                return
+
+    if sunucu_ayarlari["reklam_filtresi"]:
+        if "http://" in message.content.lower() or "https://" in message.content.lower() or "discord.gg" in message.content.lower():
+            try:
+                await message.delete()
+                await message.channel.send(f"⚠️ {message.author.mention}, bu sunucuda reklam yapmak yasaktır!", delete_after=5)
+                if sunucu_ayarlari["log_kanali"]:
+                    log_ch = bot.get_channel(sunucu_ayarlari["log_kanali"])
+                    if log_ch: await log_ch.send(f"🛡️ **Reklam Engellendi:** {message.author.tag} -> `{message.content}`")
+            except: pass
             return
 
-    # Spam Filtresi
-    if spam_filtresi_aktif:
-        ust_id = message.author.id
-        simdi = message.created_at.timestamp()
-        if ust_id not in kullanici_mesajlari:
-            kullanici_mesajlari[ust_id] = []
-        kullanici_mesajlari[ust_id].append(simdi)
-        kullanici_mesajlari[ust_id] = [t for t in kullanici_mesajlari[ust_id] if simdi - t < 3]
-        if len(kullanici_mesajlari[ust_id]) > 4:
-            await message.delete()
-            mesaj_silindi = True
-            await message.channel.send(f"⚠️ {message.author.mention}, lütfen bu kadar hızlı yazma!", delete_after=3)
-
-    # Reklam Filtresi
-    if reklam_filtresi_aktif and not mesaj_silindi:
-        if "http://" in message.content.lower() or "https://" in message.content.lower() or "discord.gg" in message.content.lower():
-            await message.delete()
-            mesaj_silindi = True
-            await message.channel.send(f"⚠️ {message.author.mention}, bu sunucuda link/reklam paylaşamazsın!", delete_after=5)
-
-    # Gelişmiş Küfür Filtresi (Nokta atışı kelime kontrolü)
-    if kufur_filtresi_aktif and not mesaj_silindi:
-        temiz_mesaj = message.content.lower().translate(str.maketrans('', '', string.punctuation))
-        kelimeler = temiz_mesaj.split()
-        
-        for kelime in kelimeler:
-            if kelime in kara_liste:
+    if sunucu_ayarlari["spam_filtresi"]:
+        now = datetime.utcnow()
+        user_id = message.author.id
+        if user_id not in spam_takip: spam_takip[user_id] = []
+        spam_takip[user_id].append(now)
+        spam_takip[user_id] = [t for t in spam_takip[user_id] if (now - t).total_seconds() <= 3]
+        if len(spam_takip[user_id]) > 4:
+            try:
                 await message.delete()
-                mesaj_silindi = True
-                await message.channel.send(f"⚠️ {message.author.mention}, sunucuda yasaklı kelime kullanmak yasaktır!", delete_after=5)
-                break
+                await message.channel.send(f"⚠️ {message.author.mention}, lütfen spam yapma.", delete_after=5)
+                return
+            except: pass
 
-    # --- 🎭 RASTGELE ETKİNLİKLER (Sıklıkları Azaltıldı) ---
-    if not mesaj_silindi and not message.content.startswith('!'):
-        sans = random.randint(1, 100)
-        
-        # %3 ihtimalle rastgele soru sorma (Üst üste aynı soru gelmez)
-        if sans <= 3 and not aktif_soru_cevap:
-            # Eğer tüm sorular sorulduysa listeyi sıfırla
-            if len(sorulan_sorular) >= len(soru_havuzu):
-                sorulan_sorular.clear()
-            
-            kalan_sorular = [s for s in soru_havuzu if s not in sorulan_sorular]
-            if kalan_sorular:
-                aktif_soru_cevap = random.choice(kalan_sorular)
-                sorulan_sorular.append(aktif_soru_cevap)
-                aktif_soru_kanali = message.channel.id
-                embed = discord.Embed(
-                    title="🧠 ÖDÜLLÜ BİLGİ YARIŞMASI!", 
-                    description=f"{aktif_soru_cevap['soru']}\n\n*İlk doğru cevabı veren 100 BTS Parası kapar!*", 
-                    color=discord.Color.purple()
-                )
-                await message.channel.send(embed=embed)
-            
-        # %2 ihtimalle üyeye yürüme/iltifat etme sistemi
-        elif sans > 3 and sans <= 5:
-            secilen_iltifat = random.choice(iltifatlar)
-            await message.channel.send(f"{message.author.mention} {secilen_iltifat}")
+    zar = random.randint(1, 100)
+    if zar <= 2:
+        await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
+    elif zar > 2 and zar <= 10:
+        soru, cevap = matematik_sorusu_uret()
+        await message.channel.send(f"🧠 **Hızlı Soru!** {message.author.mention}, cevap nedir?\n👉 `{soru}` (15 saniyen var!)")
+        def check(m): return m.author == message.author and m.channel == message.channel
+        try:
+            cevap_mesaj = await bot.wait_for('message', check=check, timeout=15.0)
+            if cevap_mesaj.content.strip() == cevap:
+                ekonomi_cuzdan[message.author.id] = ekonomi_cuzdan.get(message.author.id, 0) + 50
+                await message.channel.send(f"🎉 Doğru cevap {message.author.mention}! **50 BTS Parası** kazandın! 💰")
+            else:
+                await message.channel.send(f"❌ Yanlış cevap! Doğru yanıt `{cevap}` olmalıydı.")
+        except asyncio.TimeoutError:
+            await message.channel.send(f"⏰ Süre doldu! Yanıt `{cevap}` olmalıydı.")
 
     await bot.process_commands(message)
 
-# --- 🎵 SPOTIFY ŞARKI GÖSTERME KOMUTU ---
-@bot.command(name="spty")
-async def spotify(ctx, member: discord.Member = None):
-    if member is None: 
-        member = ctx.author
-
-    spotify_aktivite = None
-    for aktivite in member.activities:
-        if isinstance(aktivite, discord.Spotify):
-            spotify_aktivite = aktivite
-            break
-
-    if spotify_aktivite:
-        embed = discord.Embed(title=f"🎵 {member.name} şu an bunu dinliyor:", color=discord.Color.green())
-        embed.set_thumbnail(url=spotify_aktivite.album_cover_url)
-        embed.add_field(name="Şarkı Adı", value=spotify_aktivite.title, inline=False)
-        embed.add_field(name="Sanatçı", value=", ".join(spotify_aktivite.artists), inline=True)
-        embed.add_field(name="Albüm", value=spotify_aktivite.album, inline=True)
-        
-        # Süre hesaplama barı
-        toplam_sure = spotify_aktivite.duration.seconds
-        dakika = toplam_sure // 60
-        saniye = toplam_sure % 60
-        embed.set_footer(text=f"Süre: {dakika}:{saniye:02d} | Spotify")
-        
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send(f"❌ {member.mention} şu an Spotify'da bir şey dinlemiyor veya durumu Discord'da gözükmüyor! (Etkinlik durumunun açık olduğundan emin olun.)")
-
-# --- 🗑️ LOG SİSTEMİ ---
 @bot.event
-async def on_message_delete(message):
-    global log_kanali_id
-    if log_kanali_id and not message.author.bot:
-        kanal = bot.get_channel(log_kanali_id)
-        if kanal:
-            embed = discord.Embed(title="🗑️ Bir Mesaj Silindi", color=discord.Color.red())
-            embed.add_field(name="Mesaj Sahibi", value=message.author.mention, inline=True)
-            embed.add_field(name="Kanal", value=message.channel.mention, inline=True)
-            embed.add_field(name="Silinen İçerik", value=message.content if message.content else "*İçerik yok veya görsel*", inline=False)
-            await kanal.send(embed=embed)
+async def on_member_join(member):
+    if sunucu_ayarlari["giris_cikis_kanali"]:
+        ch = bot.get_channel(sunucu_ayarlari["giris_cikis_kanali"])
+        if ch: await ch.send(f"{random.choice(selamlamalar)} {member.mention}! 🥳")
 
-# --- 💰 EKONOMİ KOMUTLARI ---
+@bot.event
+async def on_member_remove(member):
+    if sunucu_ayarlari["giris_cikis_kanali"]:
+        ch = bot.get_channel(sunucu_ayarlari["giris_cikis_kanali"])
+        if ch: await ch.send(f"👋 `{member.tag}` sunucudan ayrıldı. 😔")
+
+def yetkili_kontrol():
+    async def predicate(ctx): return ctx.author.guild_permissions.administrator
+    return commands.check(predicate)
+
+@bot.command()
+@yetkili_kontrol()
+async def ayarlar(ctx):
+    embed = discord.Embed(title="🛡️ Sunucu Ayarları", color=discord.Color.blue())
+    embed.add_field(name="🤬 Küfür Filtresi", value="🟢 AÇIK" if sunucu_ayarlari["kufur_filtresi"] else "🔴 KAPALI", inline=True)
+    embed.add_field(name="🔗 Reklam Filtresi", value="🟢 AÇIK" if sunucu_ayarlari["reklam_filtresi"] else "🔴 KAPALI", inline=True)
+    embed.add_field(name="⚡ Spam Filtresi", value="🟢 AÇIK" if sunucu_ayarlari["spam_filtresi"] else "🔴 KAPALI", inline=True)
+    await ctx.send(embed=embed)
+
+@bot.command()
+@yetkili_kontrol()
+async def kufurengel(ctx):
+    sunucu_ayarlari["kufur_filtresi"] = not sunucu_ayarlari["kufur_filtresi"]
+    await ctx.send(f"🤬 Küfür filtresi: {'🟢 AÇIK' if sunucu_ayarlari['kufur_filtresi'] else '🔴 KAPALI'}")
+
+@bot.command()
+@yetkili_kontrol()
+async def reklamengel(ctx):
+    sunucu_ayarlari["reklam_filtresi"] = not sunucu_ayarlari["reklam_filtresi"]
+    await ctx.send(f"🔗 Reklam filtresi: {'🟢 AÇIK' if sunucu_ayarlari['reklam_filtresi'] else '🔴 KAPALI'}")
+
+@bot.command()
+@yetkili_kontrol()
+async def spamengel(ctx):
+    sunucu_ayarlari["spam_filtresi"] = not sunucu_ayarlari["spam_filtresi"]
+    await ctx.send(f"⚡ Spam filtresi: {'🟢 AÇIK' if sunucu_ayarlari['spam_filtresi'] else '🔴 KAPALI'}")
+
+@bot.command()
+@yetkili_kontrol()
+async def logayarla(ctx, channel: discord.TextChannel):
+    sunucu_ayarlari["log_kanali"] = channel.id
+    await ctx.send(f"📜 Log kanalı {channel.mention} yapıldı.")
+
+@bot.command(name="hosgeldin-ve-baybay-ayarla")
+@yetkili_kontrol()
+async def hosgeldin_baybay_ayarla(ctx, channel: discord.TextChannel):
+    sunucu_ayarlari["giris_cikis_kanali"] = channel.id
+    await ctx.send(f"👋 Giriş-Çıkış kanalı {channel.mention} yapıldı.")
+
+@bot.group(invoke_without_command=True)
+@yetkili_kontrol()
+async def karaliste(ctx):
+    await ctx.send(f"🚫 Yasaklı Kelimeler: {', '.join(yasakli_kelimeler) if yasakli_kelimeler else 'Boş.'}")
+
+@karaliste.command(name="ekle")
+@yetkili_kontrol()
+async def karaliste_ekle(ctx, kelime: str):
+    yasakli_kelimeler.append(kelime.lower())
+    await ctx.send(f"✅ `{kelime}` eklendi.")
+
+@karaliste.command(name="cikar")
+@yetkili_kontrol()
+async def karaliste_cikar(ctx, kelime: str):
+    if kelime.lower() in yasakli_kelimeler:
+        yasakli_kelimeler.remove(kelime.lower())
+        await ctx.send(f"✅ `{kelime}` çıkarıldı.")
+
+@bot.command()
+@yetkili_kontrol()
+async def sil(ctx, sayi: int):
+    await ctx.channel.purge(limit=min(sayi + 1, 101))
+    await ctx.send("🗑️ Temizlendi.", delete_after=3)
+
+@bot.command()
+@yetkili_kontrol()
+async def sustur(ctx, member: discord.Member, sure: str):
+    birim = sure[-1]
+    deger = int(sure[:-1])
+    dt = timedelta(minutes=deger) if birim=='m' else timedelta(hours=deger) if birim=='h' else timedelta(days=deger)
+    await member.timeout(dt)
+    await ctx.send(f"🔇 {member.mention} {sure} susturuldu.")
+
+@bot.command()
+@yetkili_kontrol()
+async def ac(ctx, member: discord.Member):
+    await member.timeout(None)
+    await ctx.send(f"🔊 {member.mention} açıldı.")
+
+@bot.command()
+@yetkili_kontrol()
+async def nuke(ctx):
+    ch = await ctx.guild.create_text_channel(name=ctx.channel.name, category=ctx.channel.category, topic=ctx.channel.topic, overwrites=ctx.channel.overwrites)
+    await ctx.channel.delete()
+    await ch.send("💥 **Kanal Sıfırlandı (Nuke)!** ✨")
+
+@bot.command()
+@yetkili_kontrol()
+async def rolver(ctx, member: discord.Member, role: discord.Role):
+    await member.add_roles(role)
+    await ctx.send("✅ Rol verildi.")
+
+@bot.command()
+@yetkili_kontrol()
+async def rolal(ctx, member: discord.Member, role: discord.Role):
+    await member.remove_roles(role)
+    await ctx.send("✅ Rol alındı.")
+
+@bot.command()
+@yetkili_kontrol()
+async def ban(ctx, member: discord.Member, *, sebep="Yok"):
+    await member.ban(reason=sebep)
+    await ctx.send(f"🚫 {member.tag} banlandı.")
+
+@bot.command()
+@yetkili_kontrol()
+async def kick(ctx, member: discord.Member, *, sebep="Yok"):
+    await member.kick(reason=sebep)
+    await ctx.send(f"👢 {member.tag} atıldı.")
+
+@bot.command()
+@yetkili_kontrol()
+async def lock(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+    await ctx.send("🔒 Kanal kilitlendi.")
+
+@bot.command()
+@yetkili_kontrol()
+async def unlock(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
+    await ctx.send("🔓 Kanal açıldı.")
+
 @bot.command()
 async def para(ctx, member: discord.Member = None):
-    if member is None: member = ctx.author
-    miktar = bts_paralari.get(member.id, 0)
-    await ctx.send(f"💰 {member.mention} kullanıcısının bakiyesi: **{miktar} BTS Parası**")
+    h = member or ctx.author
+    await ctx.send(f"💰 {h.mention}: **{ekonomi_cuzdan.get(h.id, 100)} BTS Parası**")
 
 @bot.command()
 async def slots(ctx, miktar: int):
-    u_id = ctx.author.id
-    mevcut_para = bts_paralari.get(u_id, 0)
-    
-    if miktar <= 0:
-        await ctx.send("❌ Lütfen geçerli bir miktar girin!")
-        return
-    if mevcut_para < miktar:
-        await ctx.send(f"❌ Yetersiz bakiye! Şu an sadece **{mevcut_para}** BTS Parasına sahipsin.")
-        return
-        
-    slotlar = ["🍒", "🍇", "🍊", "💎", "👑"]
-    sonuc = [random.choice(slotlar) for _ in range(3)]
-    
-    embed = discord.Embed(title="🎰 BTS SLOT MACHINE 🎰", color=discord.Color.orange())
-    embed.description = f"**[ {sonuc[0]} | {sonuc[1]} | {sonuc[2]} ]**\n\n"
-    
-    if sonuc[0] == sonuc[1] == sonuc[2]:
-        kazanc = miktar * 3
-        bts_paralari[u_id] += kazanc
-        embed.description += f"🎉 **MÜKEMMEL KAZANÇ!** Hepsi aynı geldi! \n**+{kazanc} BTS Parası** kazandın!"
-        embed.color = discord.Color.green()
-    elif sonuc[0] == sonuc[1] or sonuc[1] == sonuc[2] or sonuc[0] == sonuc[2]:
-        kazanc = miktar * 1
-        bts_paralari[u_id] += kazanc
-        embed.description += f"✨ **GÜZEL KAZANÇ!** İki adet eşleşme yakaladın! \n**+{kazanc} BTS Parası** kazandın!"
-        embed.color = discord.Color.green()
+    c = ekonomi_cuzdan.get(ctx.author.id, 100)
+    if miktar <= 0 or miktar > c: return await ctx.send("❌ Bakiye yetersiz!")
+    res = [random.choice(["🍒", "🍇", "🍋", "💎", "🔔"]) for _ in range(3)]
+    sonuc = f"┃ {res[0]} ┃ {res[1]} ┃ {res[2]} ┃"
+    if res[0] == res[1] == res[2]:
+        ekonomi_cuzdan[ctx.author.id] = c + (miktar * 3)
+        await ctx.send(f"{sonuc}\n🎉 3'te 3! Üç katı kazandın!")
+    elif res[0] == res[1] or res[1] == res[2] or res[0] == res[2]:
+        ekonomi_cuzdan[ctx.author.id] = c + miktar
+        await ctx.send(f"{sonuc}\n✨ Çift yakaladın!")
     else:
-        bts_paralari[u_id] -= miktar
-        embed.description += f"😔 **KAYBETTİN!** Hiçbiri eşleşmedi. \n**-{miktar} BTS Parası** hesabından düştü."
-        embed.color = discord.Color.red()
-        
+        ekonomi_cuzdan[ctx.author.id] = c - miktar
+        await ctx.send(f"{sonuc}\n😔 Kaybettin.")
+
+@bot.command()
+async def spty(ctx, member: discord.Member = None):
+    h = member or ctx.author
+    sp = next((a for a in h.activities if isinstance(a, discord.Spotify)), None)
+    if not sp: return await ctx.send("🎵 Spotify dinlemiyor.")
+    embed = discord.Embed(title=f"🎧 {h.name} Spotify", color=discord.Color.green())
+    embed.add_field(name="🎵 Şarkı", value=sp.title)
+    embed.add_field(name="🎤 Sanatçı", value=", ".join(sp.artists))
+    embed.set_thumbnail(url=sp.album_cover_url)
     await ctx.send(embed=embed)
 
-# --- ⚙️ AYAR VE KORUMA KOMUTLARI ---
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def ayarlar(ctx):
-    embed = discord.Embed(title="⚙️ Sunucu Koruma Paneli Ayarları", color=discord.Color.gold())
-    embed.add_field(name="Küfür Filtresi", value="🟢 Aktif" if kufur_filtresi_aktif else "🔴 Kapalı", inline=True)
-    embed.add_field(name="Reklam Filtresi", value="🟢 Aktif" if reklam_filtresi_aktif else "🔴 Kapalı", inline=True)
-    embed.add_field(name="Spam Filtresi", value="🟢 Aktif" if spam_filtresi_aktif else "🔴 Kapalı", inline=True)
-    embed.add_field(name="Kara Listedeki Kelimeler", value=", ".join(kara_liste) if kara_liste else "Boş", inline=False)
-    await ctx.send(embed=embed)
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def kufurengel(ctx):
-    global kufur_filtresi_aktif
-    kufur_filtresi_aktif = not kufur_filtresi_aktif
-    await ctx.send(f"🛡️ Küfür filtresi: **{'Açıldı 🟢' if kufur_filtresi_aktif else 'Kapatıldı 🔴'}**")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def reklamengel(ctx):
-    global reklam_filtresi_aktif
-    reklam_filtresi_aktif = not reklam_filtresi_aktif
-    await ctx.send(f"🔗 Reklam filtresi: **{'Açıldı 🟢' if reklam_filtresi_aktif else 'Kapatıldı 🔴'}**")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def spamengel(ctx):
-    global spam_filtresi_aktif
-    spam_filtresi_aktif = not spam_filtresi_aktif
-    await ctx.send(f"⚡ Spam filtresi: **{'Açıldı 🟢' if spam_filtresi_aktif else 'Kapatıldı 🔴'}**")
-
-@bot.command(name="logayarla")
-@commands.has_permissions(administrator=True)
-async def log_ayarla(ctx, kanal: discord.TextChannel):
-    global log_kanali_id
-    log_kanali_id = kanal.id
-    await ctx.send(f"✅ Silinen mesaj logları artık {kanal.mention} kanalına gönderilecek.")
-
-@bot.command(name="hosgeldin-ve-baybay-ayarla")
-@commands.has_permissions(administrator=True)
-async def hosgeldin_ve_baybay_ayarla(ctx, kanal: discord.TextChannel):
-    global hosgeldin_kanali_id
-    hosgeldin_kanali_id = kanal.id
-    await ctx.send(f"✅ Hoş geldin ve Güle güle mesajları başarıyla {kanal.mention} olarak ayarlandı!")
-
-@bot.group(invoke_without_command=True)
-@commands.has_permissions(administrator=True)
-async def karaliste(ctx):
-    await ctx.send(f"📋 **Mevcut Kara Liste:** {', '.join(kara_liste)}")
-
-@karaliste.command()
-async def ekle(ctx, kelime: str):
-    global kara_liste
-    if kelime.lower() not in kara_liste:
-        kara_liste.append(kelime.lower())
-        await ctx.send(f"✅ `{kelime}` kelimesi kara listeye eklendi.")
-
-@karaliste.command()
-async def cikar(ctx, kelime: str):
-    global kara_liste
-    if kelime.lower() in kara_liste:
-        kara_liste.remove(kelime.lower())
-        await ctx.send(f"🗑️ `{kelime}` kelimesi kara listeden çıkarıldı.")
-
-# --- 🔨 GELİŞMİŞ MODERASYON KOMUTLARI ---
-@bot.command()
-@commands.has_permissions(manage_messages=True)
-async def sil(ctx, miktar: int):
-    if miktar > 100: miktar = 100
-    await ctx.channel.purge(limit=miktar + 1)
-    await ctx.send(f"🗑️ {miktar} adet mesaj başarıyla temizlendi.", delete_after=4)
-
-@bot.command()
-@commands.has_permissions(moderate_members=True)
-async def sustur(ctx, member: discord.Member, sure: str):
-    try:
-        zaman = int(sure[:-1])
-        birim = sure[-1]
-        if birim == 'm': sure_delta = timedelta(minutes=zaman)
-        elif birim == 'h': sure_delta = timedelta(hours=zaman)
-        elif birim == 'd': sure_delta = timedelta(days=zaman)
-        else: raise ValueError
-        await member.timeout(sure_delta, reason=f"{ctx.author} tarafından susturuldu.")
-        await ctx.send(f"🔇 {member.mention} kullanıcısı {sure} boyunca susturuldu.")
-    except:
-        await ctx.send("❌ Hatalı süre formatı! Örnek kullanım: `!sustur @üye 15m` (m: dakika, h: saat, d: gün)")
-
-@bot.command()
-@commands.has_permissions(moderate_members=True)
-async def ac(ctx, member: discord.Member):
-    await member.timeout(None)
-    await ctx.send(f"🔊 {member.mention} kullanıcısının susturulması kaldırıldı.")
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def nuke(ctx):
-    kanal_pozisyonu = ctx.channel.position
-    yeni_kanal = await ctx.channel.clone(reason="Nuke işlemi")
-    await ctx.channel.delete()
-    await yeni_kanal.edit(position=kanal_pozisyonu)
-    await yeni_kanal.send("💥 Kanal başarıyla sıfırlandı!")
-
-@bot.command()
-@commands.has_permissions(manage_roles=True)
-async def rolver(ctx, member: discord.Member, role: discord.Role):
-    await member.add_roles(role)
-    await ctx.send(f"✅ {member.mention} kişisine {role.name} rolü verildi.")
-
-@bot.command()
-@commands.has_permissions(manage_roles=True)
-async def rolal(ctx, member: discord.Member, role: discord.Role):
-    await member.remove_roles(role)
-    await ctx.send(f"🗑️ {member.mention} kişisinden {role.name} rolü geri alındı.")
-
-@bot.command()
-@commands.has_permissions(ban_members=True)
-async def ban(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
-    await member.ban(reason=sebep)
-    await ctx.send(f"🚫 {member.name} sunucudan kalıcı olarak yasaklandı. Sebep: {sebep}")
-
-@bot.command()
-@commands.has_permissions(kick_members=True)
-async def kick(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
-    await member.kick(reason=sebep)
-    await ctx.send(f"👢 {member.name} sunucudan atıldı. Sebep: {sebep}")
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def lock(ctx):
-    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
-    await ctx.send("🔒 Kanal yeni mesaj gönderimine kapatıldı (Kilitlendi).")
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def unlock(ctx):
-    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=None)
-    await ctx.send("🔓 Kanalın kilidi açıldı, herkes yazabilir.")
-
-# --- 🎮 BİLGİ VE EĞLENCE KOMUTLARI ---
 @bot.command()
 async def kullanici(ctx, member: discord.Member = None):
-    if member is None: member = ctx.author
-    embed = discord.Embed(title=f"👤 {member.name} Bilgileri", color=discord.Color.purple())
-    embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
-    embed.add_field(name="Hesap Açılış Tarihi", value=member.created_at.strftime("%d/%m/%Y"), inline=True)
-    embed.add_field(name="Sunucuya Giriş Tarihi", value=member.joined_at.strftime("%d/%m/%Y"), inline=True)
+    h = member or ctx.author
+    embed = discord.Embed(title=f"👤 {h.name}", color=discord.Color.purple())
+    embed.add_field(name="📅 Açılış", value=h.created_at.strftime("%d/%m/%Y"))
+    embed.add_field(name="📥 Giriş", value=h.joined_at.strftime("%d/%m/%Y"))
     await ctx.send(embed=embed)
 
 @bot.command()
 async def sunucu(ctx):
-    g = ctx.guild
-    embed = discord.Embed(title=f"🏰 {g.name} Sunucu Özeti", color=discord.Color.blue())
-    if g.icon: embed.set_thumbnail(url=g.icon.url)
-    embed.add_field(name="Üye Sayısı", value=str(g.member_count), inline=True)
-    embed.add_field(name="Kanal Sayısı", value=str(len(g.channels)), inline=True)
-    embed.add_field(name="Rol Sayısı", value=str(len(g.roles)), inline=True)
-    embed.add_field(name="Sunucu Kurucusu", value=str(g.owner), inline=False)
+    embed = discord.Embed(title=f"📊 {ctx.guild.name}", color=discord.Color.orange())
+    embed.add_field(name="👥 Üye", value=str(ctx.guild.member_count))
     await ctx.send(embed=embed)
 
 @bot.command()
 async def askolcer(ctx, member: discord.Member):
-    orand = random.randint(0, 100)
-    b = "❤️" * (orand // 10) + "🖤" * (10 - (orand // 10))
-    await ctx.send(f"💘 {ctx.author.mention} x {member.mention}\n**Aşk Oranı:** %{orand}\n{b}")
+    o = random.randint(0, 100)
+    await ctx.send(f"💘 {ctx.author.mention} x {member.mention} -> **%{o}**")
 
 @bot.command()
 async def efkarolcer(ctx):
-    await ctx.send(f"🚬 {ctx.author.mention} Efkar Oranın: %{random.randint(0,100)}")
+    await ctx.send(f"🚬 {ctx.author.mention} efkarınız: **%{random.randint(0, 100)}**")
 
 @bot.command()
 async def sanslisayi(ctx):
-    await ctx.send(f"🎲 {ctx.author.mention}, bugünkü şanslı sayın: **{random.randint(1,100)}**")
+    await ctx.send(f"🍀 {ctx.author.mention} şanslı sayın: **{random.randint(1, 100)}**")
 
-# Web sunucusunu başlat ve botu çalıştır
-keep_alive()
-token = os.environ.get('DISCORD_TOKEN')
-if token:
-    bot.run(token)
-else:
-    print("HATA: DISCORD_TOKEN bulunamad
+slap_gifs = ["https://media.giphy.com/media/Gf3AUz3eBNbTW/giphy.gif"]
+kiss_gifs = ["https://media.giphy.com/media/G3va31WUtFxQI/giphy.gif"]
+hug_gifs = ["https://media.giphy.com/media/142te9HA8mMKs/giphy.gif"]
+
+@bot.command()
+async def slaps(ctx, member: discord.Member):
+    e = discord.Embed(description=f"💥 {ctx.author.mention}, {member.mention} kullanıcısına tokat attı!")
+    e.set_image(url=random.choice(slap_gifs))
+    await ctx.send(embed=e)
+
+@bot.command()
+async def kiss(ctx, member: discord.Member):
+    e = discord.Embed(description=f"💋 {ctx.author.mention}, {member.mention} kullanıcısını öptü!")
+    e.set_image(url=random.choice(kiss_gifs))
+    await ctx.send(embed=e)
+
+@bot.command()
+async def sarıl(ctx, member: discord.Member):
+    e = discord.Embed(description=f"🤗 {ctx.author.mention}, {member.mention} kullanıcısına sarıldı!")
+    e.set_image(url=random.choice(hug_gifs))
+    await ctx.send(embed=e) # <--- HATA DÜZELTİLDİ, EKSİK PARÇA TAMAMLANDI!
+
+@bot.command()
+async def ship(ctx):
+    uyeler = [m for m in ctx.guild.members if not m.bot and m != ctx.author]
+    if not uyeler: return await ctx.send("❌ Kimse yok.")
+    sec = random.choice(uyeler)
+    await ctx.send(f"🔮 💞 {ctx.author.mention} x {sec.mention} -> **%{random.randint(10, 100)}** ✨⭐")
+
+@bot.command(name="ship2")
+async def ship2(ctx, member: discord.Member):
+    await ctx.send(f"🔮 💞 {ctx.author.mention} x {member.mention}\n**Oran: %99999** 🔥\n🌟 ✨ **BU AŞK ÖLÇÜLEMEZ!** ✨ 🌟")
+
+@bot.command()
+async def yardim(ctx):
+    embed = discord.Embed(title="🌸 Bot Komut Menüsü 🌸", color=discord.Color.gold())
+    embed.add_field(name="🛡️ Filtreler", value="`Küfür`, `Reklam`, `Spam`, `SA-AS`", inline=False)
+    embed.add_field(name="⚙️ Ayarlar", value="`!ayarlar`, `!kufurengel`, `!reklamengel`, `!spamengel`, `!logayarla`", inline=False)
+    embed.add_field(name="🎬 Eğlence & Aksiyon", value="`!slaps`, `!kiss`, `!sarıl`, `!ship`, `!ship2`, `!yardim`", inline=False)
+    await ctx.send(embed=embed)
+
+# Render'da güvenle çalışması için Token'ı Environment'tan çekiyoruz
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+bot.run(TOKEN)
