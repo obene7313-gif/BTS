@@ -3,8 +3,7 @@ from discord.ext import commands
 import random
 import asyncio
 import os
-from datetime import datetime
-import pytz 
+from datetime import datetime, timedelta, timezone # pytz yerine dahili zaman modülleri eklendi
 from threading import Thread
 from flask import Flask
 
@@ -55,10 +54,9 @@ sunucu_ayarlari = {
 user_data = {}  
 last_message_time = {} 
 
-# Para sorununu çözen güvenli cüzdan fonksiyonu
 def get_user(user_id):
     if user_id not in user_data:
-        user_data[user_id] = {"para": 100} # Herkese başlangıçta 100 BTS
+        user_data[user_id] = {"para": 100}
     return user_data[user_id]
 
 KUFUR_KOKLERI = ["amk", "aq", "orospu", "sik", "piç", "göt", "yarrak", "pezevenk"]
@@ -137,7 +135,7 @@ async def on_message(message):
         secilen_iltifat = iltifat_listesi[random.randint(0, len(iltifat_listesi) - 1)]
         await message.channel.send(f"{message.author.mention} {secilen_iltifat}")
 
-    # %7 Yarışma Sistemi (Süre 30 Saniyeye Çıkarıldı)
+    # %7 Yarışma Sistemi (Süre 30 Saniye)
     if random.random() < 0.07:
         if random.random() < 0.75:
             sayi1 = random.randint(1, 20)
@@ -176,11 +174,10 @@ async def on_message(message):
             return m.channel == message.channel and m.content.strip().upper() == dogru_harf and not m.author.bot
 
         try:
-            # Süre tam 30.0 saniye yapıldı canım
             kazanan_mesaj = await bot.wait_for('message', check=check, timeout=30.0)
             kazanan = kazanan_mesaj.author
             user_profil = get_user(kazanan.id)
-            user_profil["para"] += 50 # Ödül parayı cüzdana ekler
+            user_profil["para"] += 50
             await message.channel.send(f"🎉 Tebrikler {kazanan.mention}! Doğru harfi (**{dogru_harf}**) bildin ve **50 BTS Parası** kazandın! 💰 Güncel Bakiye: {user_profil['para']} BTS")
         except asyncio.TimeoutError:
             await message.channel.send(f"⏰ Süre bitti! Doğru cevap **{dogru_harf}** şıkkı olmalıydı.")
@@ -271,7 +268,7 @@ async def ucanguvercin(ctx, member: discord.Member):
 
 @bot.command()
 async def askolcer(ctx, member: discord.Member):
-    await ctx.send(f"❤️ {ctx.author.mention} ile {member.mention} Basketball arasındaki aşk oranı: **%{random.randint(0, 100)}**")
+    await ctx.send(f"❤️ {ctx.author.mention} ile {member.mention} arasındaki aşk oranı: **%{random.randint(0, 100)}**")
 
 @bot.command()
 async def efkarolcer(ctx):
@@ -293,19 +290,20 @@ async def ship2(ctx, member: discord.Member):
 
 @bot.command()
 async def saat(ctx):
-    tz = pytz.timezone('Europe/Istanbul')
-    su_an = datetime.now(tz).strftime("%H:%M:%S")
-    tarih = datetime.now(tz).strftime("%d/%m/%Y")
+    # Dış kütüphane bağımlılığı tamamen kaldırıldı, Türkiye saati el ile senkronize edildi.
+    tz_turkey = timezone(timedelta(hours=3))
+    su_an = datetime.now(tz_turkey).strftime("%H:%M:%S")
+    tarih = datetime.now(tz_turkey).strftime("%d/%m/%Y")
     await ctx.send(f"⏰ {ctx.author.mention}, şu an canlı zaman dilimi:\n📅 Tarih: **{tarih}**\n⏱️ Saat: **{su_an}**")
 
 # ====================================================================
-# 💰 EKONOMİ & CÜZDAN SİSTEMİ (Tamamen Hataları Düzeltildi)
+# 💰 EKONOMİ & CÜZDAN SİSTEMİ
 # ====================================================================
 
 @bot.command()
 async def para(ctx, member: discord.Member = None):
     hedef = member or ctx.author
-    profil = get_user(hedef.id) # Profil yoksa otomatik oluşturur, hatayı önler
+    profil = get_user(hedef.id)
     await ctx.send(f"💰 {hedef.mention} cüzdanında **{profil['para']} BTS Parası** var.")
 
 @bot.command()
@@ -326,7 +324,6 @@ async def slots(ctx, miktar: int):
     mesaj = await ctx.send("🎰 **Slots makinesi dönüyor...**")
     await asyncio.sleep(1.5)
     
-    # Kazanma ve kaybetme durumlarında veriyi kalıcı olarak hafızaya yazıyoruz
     if s1 == s2 == s3:
         kazanc = miktar * 4
         profil["para"] += kazanc
@@ -349,3 +346,4 @@ async def yardim(ctx):
 
 keep_alive()
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+            
