@@ -4,14 +4,13 @@ import random
 import asyncio
 import os
 from datetime import datetime
-import pytz # Saat dilimi için gerekli
+import pytz 
 from threading import Thread
 from flask import Flask
 
 # --- İLTİFAT VE SELAM LİSTELERİNİ ÇEKME VE KONTROL ---
 try:
     from iltifatlar import iltifat_listesi, selam_cevaplari
-    # Eğer listeler yanlışlıkla tek elemanlı kalmışsa diye temizlik garantisi
     if len(iltifat_listesi) == 1 and isinstance(iltifat_listesi[0], list):
         iltifat_listesi = iltifat_listesi[0]
     if len(selam_cevaplari) == 1 and isinstance(selam_cevaplari[0], list):
@@ -56,15 +55,15 @@ sunucu_ayarlari = {
 user_data = {}  
 last_message_time = {} 
 
+# Para sorununu çözen güvenli cüzdan fonksiyonu
 def get_user(user_id):
     if user_id not in user_data:
-        user_data[user_id] = {"para": 100} 
+        user_data[user_id] = {"para": 100} # Herkese başlangıçta 100 BTS
     return user_data[user_id]
 
 KUFUR_KOKLERI = ["amk", "aq", "orospu", "sik", "piç", "göt", "yarrak", "pezevenk"]
 REKLAM_UZANTILARI = ["http://", "https://", "discord.gg/", ".com", ".net", ".org", "www."]
 
-# --- BTS SORU HAVUZU ---
 BTS_SORULARI = [
     {"soru": "BTS hangi yıl çıkış yapmıştır?", "şıklar": ["A) 2010", "B) 2013", "C) 2015", "D) 2016"], "cevap": "B"},
     {"soru": "BTS grubunun lideri kimdir?", "şıklar": ["A) Jimin", "B) Jungkook", "C) RM", "D) Suga"], "cevap": "C"},
@@ -74,20 +73,17 @@ BTS_SORULARI = [
     {"soru": "BTS'in 'Golden Maknae' unvanına sahip üyesi kimdir?", "şıklar": ["A) Jungkook", "B) Jimin", "C) V", "D) Suga"], "cevap": "A"}
 ]
 
-# --- BOT HAZIR OLDUĞUNDA ---
 @bot.event
 async def on_ready():
     print(f"Bot {bot.user.name} olarak başarıyla giriş yaptı! 🌸🚀")
     await bot.change_presence(activity=discord.Game(name="!yardim | BTS 💖"))
 
-# --- ÜYE GİRİŞ / ÇIKIŞ SİSTEMİ ---
 @bot.event
 async def on_member_join(member):
     kanal_id = sunucu_ayarlari["welcome_kanal_id"]
     if kanal_id:
         kanal = bot.get_channel(kanal_id)
         if kanal:
-            # Rastgele seçimi garanti altına almak için len kontrolüyle çekiyoruz
             secilen_selam = selam_cevaplari[random.randint(0, len(selam_cevaplari) - 1)]
             await kanal.send(f"📥 **{member.mention}** geldi! {secilen_selam}")
 
@@ -99,7 +95,6 @@ async def on_member_remove(member):
         if kanal:
             await kanal.send(f"📤 **{member.name}** sunucudan ayrıldı, görüşmek üzere... 💔")
 
-# --- MESAJ ETKİLEŞİMLERİ VE FİLTRELER ---
 @bot.event
 async def on_message(message):
     if message.author.bot:
@@ -111,13 +106,7 @@ async def on_message(message):
         await message.channel.send("Aleyküm Selam, hoş geldin! 🌸✨")
         return
 
-    async def log_gonder(icerik):
-        if sunucu_ayarlari["log_kanal_id"]:
-            log_kanali = bot.get_channel(sunucu_ayarlari["log_kanal_id"])
-            if log_kanali:
-                await log_kanali.send(icerik)
-
-    # SPAM ENGEL SİSTEMİ
+    # SPAM ENGEL
     if sunucu_ayarlari["spam_engel"]:
         now = datetime.now()
         user_id = message.author.id
@@ -129,28 +118,27 @@ async def on_message(message):
                 return
         last_message_time[user_id] = now
 
-    # KÜFÜR ENGEL SİSTEMİ
+    # KÜFÜR ENGEL
     if sunucu_ayarlari["kufur_engel"]:
         if any(kok in msg_lower for kok in KUFUR_KOKLERI) or any(kelime in msg_lower for kelime in sunucu_ayarlari["kara_liste"]):
             await message.delete()
             await message.channel.send(f"⚠️ {message.author.mention}, küfürlü/yasaklı kelime kullanmak yasaktır!", delete_after=5)
             return
 
-    # REKLAM ENGEL SİSTEMİ
+    # REKLAM ENGEL
     if sunucu_ayarlari["reklam_engel"]:
         if any(link in msg_lower for link in REKLAM_UZANTILARI):
             await message.delete()
             await message.channel.send(f"⚠️ {message.author.mention}, reklam/link paylaşımı yasaktır!", delete_after=5)
             return
 
-    # 1. RASTGELE İLTİFAT SİSTEMİ (%3 yapıldı)
+    # %3 İltifat
     if random.random() < 0.03:
         secilen_iltifat = iltifat_listesi[random.randint(0, len(iltifat_listesi) - 1)]
         await message.channel.send(f"{message.author.mention} {secilen_iltifat}")
 
-    # 2. ŞIKLI YARIŞMA SİSTEMİ (%7 yapıldı - Çoğunluk Matematik, Ara Sıra BTS)
+    # %7 Yarışma Sistemi (Süre 30 Saniyeye Çıkarıldı)
     if random.random() < 0.07:
-        # %75 Matematik, %25 BTS sorusu gelme ihtimali
         if random.random() < 0.75:
             sayi1 = random.randint(1, 20)
             sayi2 = random.randint(1, 15)
@@ -160,7 +148,6 @@ async def on_message(message):
             elif islem == "-": dogru_sonuc = sayi1 - sayi2
             else: dogru_sonuc = sayi1 * sayi2
 
-            # Yanlış şıkları üretme
             yanlislar = set()
             while len(yanlislar) < 3:
                 sapma = random.randint(-10, 10)
@@ -177,24 +164,23 @@ async def on_message(message):
             
             soru_metni = f"🧮 **HIZLI MATEMATİK YARIŞMASI!**\nSoru: **{sayi1} {islem} {sayi2} = ?**"
         else:
-            # BTS Sorusu seçimi
             bts_soru = random.choice(BTS_SORULARI)
             soru_metni = f"💜 **BTS BİLGİ YARIŞMASI!**\nSoru: **{bts_soru['soru']}**"
             siklar_metni = bts_soru["şıklar"]
             dogru_harf = bts_soru["cevap"]
 
-        # Soruyu gönderme (Şıklar aşağıda temizce listelenir)
-        final_mesaj = f"{soru_metni}\n\n" + "\n".join(siklar_metni) + "\n\n*Cevap vermek için sadece harfi (**A, B, C veya D**) yazın! Süre 15 Saniye!*"
+        final_mesaj = f"{soru_metni}\n\n" + "\n".join(siklar_metni) + "\n\n*Cevap vermek için sadece harfi (**A, B, C veya D**) yazın! Süre 30 Saniye!*"
         await message.channel.send(final_mesaj)
 
         def check(m):
             return m.channel == message.channel and m.content.strip().upper() == dogru_harf and not m.author.bot
 
         try:
-            kazanan_mesaj = await bot.wait_for('message', check=check, timeout=15.0)
+            # Süre tam 30.0 saniye yapıldı canım
+            kazanan_mesaj = await bot.wait_for('message', check=check, timeout=30.0)
             kazanan = kazanan_mesaj.author
             user_profil = get_user(kazanan.id)
-            user_profil["para"] += 50
+            user_profil["para"] += 50 # Ödül parayı cüzdana ekler
             await message.channel.send(f"🎉 Tebrikler {kazanan.mention}! Doğru harfi (**{dogru_harf}**) bildin ve **50 BTS Parası** kazandın! 💰 Güncel Bakiye: {user_profil['para']} BTS")
         except asyncio.TimeoutError:
             await message.channel.send(f"⏰ Süre bitti! Doğru cevap **{dogru_harf}** şıkkı olmalıydı.")
@@ -251,7 +237,7 @@ async def sil(ctx, sayi: int):
     await ctx.send(f"🗑️ **{sayi}** adet mesaj temizlendi.", delete_after=3)
 
 # ====================================================================
-# 🎮 EĞLENCE & ETKİLEŞİM KOMUTLARI (Gif Hataları Çözüldü & Artırıldı)
+# 🎮 EĞLENCE & ETKİLEŞİM KOMUTLARI
 # ====================================================================
 
 @bot.command()
@@ -278,7 +264,6 @@ async def sarıl(ctx, member: discord.Member):
     ]
     await ctx.send(f"🤗 {ctx.author.mention}, {member.mention} üyesine sımsıkı sarıldı!\n{random.choice(gifs)}")
 
-# 🕊️ YENİ EKLEYELİM DEDİĞİN GÜVERCİN KOMUTU
 @bot.command(name="uçangüvercin")
 async def ucanguvercin(ctx, member: discord.Member):
     gif = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXZuMWV1amMxNXl5cDZ3dW80dG9nNnk4Yzg5dXBveTN5d3Q1NndhdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l3q2K1M66D069Jp6M/giphy.gif"
@@ -286,7 +271,7 @@ async def ucanguvercin(ctx, member: discord.Member):
 
 @bot.command()
 async def askolcer(ctx, member: discord.Member):
-    await ctx.send(f"❤️ {ctx.author.mention} ile {member.mention} arasındaki aşk oranı: **%{random.randint(0, 100)}**")
+    await ctx.send(f"❤️ {ctx.author.mention} ile {member.mention} Basketball arasındaki aşk oranı: **%{random.randint(0, 100)}**")
 
 @bot.command()
 async def efkarolcer(ctx):
@@ -306,7 +291,6 @@ async def ship(ctx):
 async def ship2(ctx, member: discord.Member):
     await ctx.send(f"❤️‍🔥 **AMANSIZ BİR AŞK!** \n💞 {ctx.author.mention} & {member.mention} \n🔥 Aşk Oranı: **%99999** \n🏆 *Bu aşk ölçülemez, siz birbiriniz için yaratılmışsınız!*")
 
-# ⏰ YENİ EKLEYELİM DEDİĞİN SAAT KOMUTU (Türkiye Saat Dilimi)
 @bot.command()
 async def saat(ctx):
     tz = pytz.timezone('Europe/Istanbul')
@@ -315,34 +299,45 @@ async def saat(ctx):
     await ctx.send(f"⏰ {ctx.author.mention}, şu an canlı zaman dilimi:\n📅 Tarih: **{tarih}**\n⏱️ Saat: **{su_an}**")
 
 # ====================================================================
-# 💰 EKONOMİ & BİLGİ KOMUTLARI
+# 💰 EKONOMİ & CÜZDAN SİSTEMİ (Tamamen Hataları Düzeltildi)
 # ====================================================================
 
 @bot.command()
 async def para(ctx, member: discord.Member = None):
     hedef = member or ctx.author
-    profil = get_user(hedef.id)
+    profil = get_user(hedef.id) # Profil yoksa otomatik oluşturur, hatayı önler
     await ctx.send(f"💰 {hedef.mention} cüzdanında **{profil['para']} BTS Parası** var.")
 
 @bot.command()
 async def slots(ctx, miktar: int):
     profil = get_user(ctx.author.id)
-    if miktar <= 0 or profil["para"] < miktar: return await ctx.send("Geçersiz bakiye.")
+    
+    if miktar <= 0:
+        await ctx.send("❌ Lütfen 0'dan büyük geçerli bir para miktarı girin canım!")
+        return
+        
+    if profil["para"] < miktar:
+        await ctx.send(f"❌ Cüzdanında yeterli para yok tatlım! Güncel Bakiyen: **{profil['para']} BTS**")
+        return
     
     emojiler = ["🍒", "🍋", "🍇", "💎", "🔔"]
     s1, s2, s3 = random.choice(emojiler), random.choice(emojiler), random.choice(emojiler)
-    mesaj = await ctx.send("🎰 **Slots dönüyor...**")
-    await asyncio.sleep(1)
     
+    mesaj = await ctx.send("🎰 **Slots makinesi dönüyor...**")
+    await asyncio.sleep(1.5)
+    
+    # Kazanma ve kaybetme durumlarında veriyi kalıcı olarak hafızaya yazıyoruz
     if s1 == s2 == s3:
-        profil["para"] += miktar * 4
-        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n🎉 3'te 3! **{miktar*4} BTS** kazandın!")
+        kazanc = miktar * 4
+        profil["para"] += kazanc
+        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n🎉 **MÜKEMMEL! 3'te 3 YAPTIN!** \n💰 **+{kazanc} BTS** kazandın! Yeni Bakiyen: **{profil['para']} BTS**")
     elif s1 == s2 or s2 == s3 or s1 == s3:
-        profil["para"] += int(miktar * 1.5)
-        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n✨ Çift Yakaladın! **{int(miktar*1.5)} BTS** kazandın!")
+        kazanc = int(miktar * 1.5)
+        profil["para"] += kazanc
+        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n✨ **Çift Yakaladın!** \n💰 **+{kazanc} BTS** kazandın! Yeni Bakiyen: **{profil['para']} BTS**")
     else:
         profil["para"] -= miktar
-        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n😭 Kaybettin! **{miktar} BTS** uçtu.")
+        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n😭 **Şanssız günündesin, kaybettin!** \n💸 **-{miktar} BTS** cüzdandan gitti. Kalan Bakiyen: **{profil['para']} BTS**")
 
 @bot.command()
 async def yardim(ctx):
@@ -354,4 +349,3 @@ async def yardim(ctx):
 
 keep_alive()
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
-            
