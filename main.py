@@ -109,7 +109,7 @@ async def on_message(message):
 
     msg_lower = message.content.lower()
 
-            if msg_lower in ["sa", "selam", "slm", "merhaba", "mrb"]:
+    if msg_lower in ["sa", "selam", "slm", "merhaba", "mrb"]:
         secilen_selam = random.choice(selam_listesi)
         await message.channel.send(secilen_selam)
         return
