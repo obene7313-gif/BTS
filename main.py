@@ -3,7 +3,7 @@ from discord.ext import commands
 import random
 import asyncio
 import os
-from datetime import datetime, timedelta, timezone # pytz yerine dahili zaman modülleri eklendi
+from datetime import datetime, timedelta, timezone
 from threading import Thread
 from flask import Flask
 
@@ -11,7 +11,6 @@ from flask import Flask
 try:
     from iltifatlar import iltifatlar, selam_cevaplari
     
-    # Eğer listeler bir şekilde iç içe liste olarak geldiyse düzeltiyoruz
     if len(iltifatlar) == 1 and isinstance(iltifatlar[0], list):
         iltifat_listesi = iltifatlar[0]
     else:
@@ -22,7 +21,6 @@ try:
     else:
         selam_listesi = selam_cevaplari
 except ImportError:
-    # Dosya okunamazsa yedek koruma listesi
     iltifat_listesi = ["Harikasın! ✨", "Gözlerin parıldıyor! 🌟"]
     selam_listesi = ["Hoş geldin canım! ⭐️", "Selamlar güzellik! 🥰"]
     
@@ -67,7 +65,7 @@ def get_user(user_id):
         user_data[user_id] = {"para": 100}
     return user_data[user_id]
 
-KUFUR_KOKLERI = ["amk", "aq", "orospu", "sik", "piç", "göt", "yarrak", "pezevenk"]
+KUFUR_KOKLERI = ["amk", "aq", "orospu", "sik", "piç", "göt", "yarrak", "pezevenk", "pic", "yarrak", "am", "sg", "oropsu", "allahini", "kuranini"]
 REKLAM_UZANTILARI = ["http://", "https://", "discord.gg/", ".com", ".net", ".org", "www."]
 
 BTS_SORULARI = [
@@ -92,7 +90,6 @@ async def on_member_join(member):
         if kanal:
             secilen_selam = random.choice(selam_listesi)
             await kanal.send(f"👑 **{member.mention}** geldi! {secilen_selam}")
-        
 
 @bot.event
 async def on_member_remove(member):
@@ -286,7 +283,7 @@ async def efkarolcer(ctx):
 
 @bot.command()
 async def sanslisayi(ctx):
-    await ctx.send(f"🍀 {ctx.author.mention}, today senin şanslı sayın: **{random.randint(1, 100)}**")
+    await ctx.send(f"🍀 {ctx.author.mention}, bugün senin şanslı sayın: **{random.randint(1, 100)}**")
 
 @bot.command()
 async def ship(ctx):
@@ -300,7 +297,6 @@ async def ship2(ctx, member: discord.Member):
 
 @bot.command()
 async def saat(ctx):
-    # Dış kütüphane bağımlılığı tamamen kaldırıldı, Türkiye saati el ile senkronize edildi.
     tz_turkey = timezone(timedelta(hours=3))
     su_an = datetime.now(tz_turkey).strftime("%H:%M:%S")
     tarih = datetime.now(tz_turkey).strftime("%d/%m/%Y")
@@ -356,4 +352,4 @@ async def yardim(ctx):
 
 keep_alive()
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
-        
+    
