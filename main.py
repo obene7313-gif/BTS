@@ -109,10 +109,11 @@ async def on_message(message):
 
     msg_lower = message.content.lower()
 
-        if msg_lower in ["sa", "selam", "slm", "merhaba", "mrb"]:
+            if msg_lower in ["sa", "selam", "slm", "merhaba", "mrb"]:
         secilen_selam = random.choice(selam_listesi)
         await message.channel.send(secilen_selam)
         return
+
             
 
     # SPAM ENGEL
@@ -143,9 +144,9 @@ async def on_message(message):
 
     # %3 İltifat
     if random.random() < 0.03:
-                secilen_iltifat = random.choice(iltifat_listesi)
+                        secilen_iltifat = random.choice(iltifat_listesi)
         await message.channel.send(f"{message.author.mention} {secilen_iltifat}")
-
+            
     # %7 Yarışma Sistemi (Süre 30 Saniye)
     if random.random() < 0.07:
         if random.random() < 0.75:
