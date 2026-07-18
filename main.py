@@ -91,7 +91,7 @@ async def on_member_join(member):
         kanal = bot.get_channel(kanal_id)
         if kanal:
                         secilen_selam = random.choice(selam_listesi)
-await kanal.send(f"👑 **{member.mention}** geldi! {secilen_selam}")
+                        await kanal.send(f"👑 **{member.mention}** geldi! {secilen_selam}")
         
 
 @bot.event
