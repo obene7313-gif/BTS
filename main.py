@@ -9,15 +9,23 @@ from flask import Flask
 
 # --- İLTİFAT VE SELAM LİSTELERİNİ ÇEKME VE KONTROL ---
 try:
-    from iltifatlar import iltifat_listesi, selam_cevaplari
-    if len(iltifat_listesi) == 1 and isinstance(iltifat_listesi[0], list):
-        iltifat_listesi = iltifat_listesi[0]
+    from iltifatlar import iltifatlar, selam_cevaplari
+    
+    # Eğer listeler bir şekilde iç içe liste olarak geldiyse düzeltiyoruz
+    if len(iltifatlar) == 1 and isinstance(iltifatlar[0], list):
+        iltifat_listesi = iltifatlar[0]
+    else:
+        iltifat_listesi = iltifatlar
+        
     if len(selam_cevaplari) == 1 and isinstance(selam_cevaplari[0], list):
-        selam_cevaplari = selam_cevaplari[0]
+        selam_listesi = selam_cevaplari[0]
+    else:
+        selam_listesi = selam_cevaplari
 except ImportError:
-    iltifat_listesi = ["Harikasın! ✨", "Gözlerin parıldıyor! ⭐"]
-    selam_cevaplari = ["Hoş geldin canım! ⭐", "Selamlar güzellik! 🥰"]
-
+    # Dosya okunamazsa yedek koruma listesi
+    iltifat_listesi = ["Harikasın! ✨", "Gözlerin parıldıyor! 🌟"]
+    selam_listesi = ["Hoş geldin canım! ⭐️", "Selamlar güzellik! 🥰"]
+    
 # --- FLASK WEB SERVER (Render Aktif Tutma İçin) ---
 app = Flask('')
 
