@@ -90,8 +90,9 @@ async def on_member_join(member):
     if kanal_id:
         kanal = bot.get_channel(kanal_id)
         if kanal:
-            secilen_selam = selam_cevaplari[random.randint(0, len(selam_cevaplari) - 1)]
-            await kanal.send(f"📥 **{member.mention}** geldi! {secilen_selam}")
+                        secilen_selam = random.choice(selam_listesi)
+            await kanal.send(f"👑 **{member.mention}** geldi! {secilen_selam}")
+        
 
 @bot.event
 async def on_member_remove(member):
