@@ -90,8 +90,8 @@ async def on_member_join(member):
     if kanal_id:
         kanal = bot.get_channel(kanal_id)
         if kanal:
-                        secilen_selam = random.choice(selam_listesi)
-                        await kanal.send(f"👑 **{member.mention}** geldi! {secilen_selam}")
+            secilen_selam = random.choice(selam_listesi)
+            await kanal.send(f"👑 **{member.mention}** geldi! {secilen_selam}")
         
 
 @bot.event
@@ -113,8 +113,6 @@ async def on_message(message):
         secilen_selam = random.choice(selam_listesi)
         await message.channel.send(secilen_selam)
         return
-
-            
 
     # SPAM ENGEL
     if sunucu_ayarlari["spam_engel"]:
@@ -144,7 +142,7 @@ async def on_message(message):
 
     # %3 İltifat
     if random.random() < 0.03:
-                        secilen_iltifat = random.choice(iltifat_listesi)
+        secilen_iltifat = random.choice(iltifat_listesi)
         await message.channel.send(f"{message.author.mention} {secilen_iltifat}")
             
     # %7 Yarışma Sistemi (Süre 30 Saniye)
@@ -288,7 +286,7 @@ async def efkarolcer(ctx):
 
 @bot.command()
 async def sanslisayi(ctx):
-    await ctx.send(f"🍀 {ctx.author.mention}, bugün senin şanslı sayın: **{random.randint(1, 100)}**")
+    await ctx.send(f"🍀 {ctx.author.mention}, today senin şanslı sayın: **{random.randint(1, 100)}**")
 
 @bot.command()
 async def ship(ctx):
@@ -358,4 +356,4 @@ async def yardim(ctx):
 
 keep_alive()
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
-            
+        
