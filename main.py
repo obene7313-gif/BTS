@@ -59,6 +59,7 @@ sunucu_ayarlari = {
 
 user_data = {}  
 last_message_time = {} 
+afk_kullanicilar = {}
 
 def get_user(user_id):
     if user_id not in user_data:
@@ -104,6 +105,16 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    if message.author.id in afk_kullanicilar:
+        afk_sure = datetime.now() - afk_kullanicilar[message.author.id]["zaman"]
+        dakika = int(afk_sure.total_seconds() / 60)
+        saniye = int(afk_sure.total_seconds() % 60)
+        
+        sure_metni = f"{dakika} dakika, {saniye} saniye" if dakika > 0 else f"{saniye} saniye"
+        
+        del afk_kullanicilar[message.author.id]
+        await message.channel.send(f"🌸 **{message.author.mention}** geri döndü! `{sure_metni}` boyunca buralarda yoktu, hoş geldin canım! 💕")
+
     msg_lower = message.content.lower()
 
     if msg_lower in ["sa", "selam", "slm", "merhaba", "mrb"]:
@@ -111,7 +122,6 @@ async def on_message(message):
         await message.channel.send(secilen_selam)
         return
 
-    # SPAM ENGEL
     if sunucu_ayarlari["spam_engel"]:
         now = datetime.now()
         user_id = message.author.id
@@ -123,26 +133,22 @@ async def on_message(message):
                 return
         last_message_time[user_id] = now
 
-    # KÜFÜR ENGEL
     if sunucu_ayarlari["kufur_engel"]:
         if any(kok in msg_lower for kok in KUFUR_KOKLERI) or any(kelime in msg_lower for kelime in sunucu_ayarlari["kara_liste"]):
             await message.delete()
             await message.channel.send(f"⚠️ {message.author.mention}, küfürlü/yasaklı kelime kullanmak yasaktır!", delete_after=5)
             return
 
-    # REKLAM ENGEL
     if sunucu_ayarlari["reklam_engel"]:
         if any(link in msg_lower for link in REKLAM_UZANTILARI):
             await message.delete()
             await message.channel.send(f"⚠️ {message.author.mention}, reklam/link paylaşımı yasaktır!", delete_after=5)
             return
 
-    # %3 İltifat
     if random.random() < 0.03:
         secilen_iltifat = random.choice(iltifat_listesi)
         await message.channel.send(f"{message.author.mention} {secilen_iltifat}")
             
-    # %7 Yarışma Sistemi (Süre 30 Saniye)
     if random.random() < 0.07:
         if random.random() < 0.75:
             sayi1 = random.randint(1, 20)
@@ -190,6 +196,29 @@ async def on_message(message):
             await message.channel.send(f"⏰ Süre bitti! Doğru cevap **{dogru_harf}** şıkkı olmalıydı.")
 
     await bot.process_commands(message)
+
+# ====================================================================
+# 💤 AFK SİSTEMİ KOMUTU
+# ====================================================================
+
+@bot.command()
+async def afk(ctx, *, sebep: str = None):
+    if ctx.author.id in afk_kullanicilar:
+        del afk_kullanicilar[ctx.author.id]
+        await ctx.send(f"🌸 **{ctx.author.mention}**, AFK modun zaten açıktı, şimdi kapatıldı. Yeniden hoş geldin!")
+        return
+
+    if sebep is None:
+        tatli_mesajlar = [
+            "pofuduk yastığını aldı ve kısa süreliğine AFK moduna geçti... 💤",
+            "kahvesini tazelemek için minik bir mola verdi, hemen dönecek! ☕️",
+            "biraz dinlenmek için köşesine çekildi, gözleri buralarda olsun... ✨"
+        ]
+        afk_kullanicilar[ctx.author.id] = {"sebep": "Belirtilmedi", "zaman": datetime.now()}
+        await ctx.send(f"💤 **{ctx.author.mention}** {random.choice(tatli_mesajlar)}")
+    else:
+        afk_kullanicilar[ctx.author.id] = {"sebep": sebep, "zaman": datetime.now()}
+        await ctx.send(f"💤 **{ctx.author.mention}** AFK kaldı!\n**Sebep:** {sebep}")
 
 # ====================================================================
 # 🛡️ YETKİLİ & YÖNETİM KOMUTLARI
@@ -346,10 +375,10 @@ async def slots(ctx, miktar: int):
 async def yardim(ctx):
     embed = discord.Embed(title="🤖 BTS Bot Komut Menüsü", color=discord.Color.green())
     embed.add_field(name="🛡️ Yönetim", value="`!ayarlar`, `!kufurengel`, `!reklamengel`, `!spamengel`, `!sil [sayı]`", inline=False)
+    embed.add_field(name="💤 Durum Sistemi", value="`!afk`, `!afk [sebep]`", inline=False)
     embed.add_field(name="🎮 Eğlence & Etkileşim", value="`!slaps`, `!kiss`, `!sarıl`, `!uçangüvercin`, `!askolcer`, `!efkarolcer`, `!sanslisayi`, `!ship`, `!ship2`, `!saat`", inline=False)
     embed.add_field(name="💰 Ekonomi", value="`!para`, `!slots [miktar]`", inline=False)
     await ctx.send(embed=embed)
 
 keep_alive()
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
-    
