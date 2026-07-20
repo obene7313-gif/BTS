@@ -372,4 +372,192 @@ async def sustur(ctx, member: discord.Member, sure: str, *, sebep="Belirtilmedi"
     unit = sure[-1]
     if unit not in time_dict or not sure[:-1].isdigit():
         await ctx.send("❌ Geçersiz süre formatı! Örn: 5m, 2h, 1d")
-     
+        return
+    minutes = int(sure[:-1]) * time_dict[unit]
+    duration = datetime.timedelta(minutes=minutes)
+    await member.timeout(duration, reason=sebep)
+    await ctx.send(f"🤐 {member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
+
+@bot.command()
+@commands.has_permissions(moderate_members=True)
+async def ac(ctx, member: discord.Member):
+    await member.timeout(None)
+    await ctx.send(f"🔊 {member.mention} kullanıcısının susturulması kaldırıldı.")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def nuke(ctx):
+    pos = ctx.channel.position
+    new_ch = await ctx.channel.clone(reason="Nuke İşlemi")
+    await ctx.channel.delete()
+    await new_ch.edit(position=pos)
+    await new_ch.send("💥 Kanal başarıyla sıfırlandı (Nuke)!\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464835")
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def rolver(ctx, member: discord.Member, role: discord.Role):
+    await member.add_roles(role)
+    await ctx.send(f"✅ {member.mention} isimli üyeye **{role.name}** rolü verildi.")
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def rolal(ctx, member: discord.Member, role: discord.Role):
+    await member.remove_roles(role)
+    await ctx.send(f"✅ {member.mention} isimli üyeden **{role.name}** rolü geri alındı.")
+
+@bot.command()
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
+    await member.ban(reason=sebep)
+    await ctx.send(f"🔨 **{member.name}** sunucudan banlandı. Sebep: {sebep}")
+
+@bot.command()
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
+    await member.kick(reason=sebep)
+    await ctx.send(f"👢 **{member.name}** sunucudan atıldı. Sebep: {sebep}")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def lock(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+    await ctx.send("🔒 Kanal yazışmaya kapatıldı!")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def unlock(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
+    await ctx.send("🔓 Kanal tekrar yazışmaya açıldı.")
+
+# --- AFK SİSTEMİ ---
+@bot.command()
+async def afk(ctx, *, sebep="Belirtilmedi"):
+    afk_users[ctx.author.id] = sebep
+    await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin!\n**Sebep:** {sebep}")
+
+# --- EĞLENCE & ETKİLEŞİM KOMUTLARI ---
+@bot.command()
+async def uçangüvercin(ctx, member: discord.Member):
+    await ctx.send(f"🕊️ {ctx.author.mention}, {member.mention} kullanıcısına uçarak gelen çatık kaşlı bir güvercin fırlattı!\n**Tekme atıyor bu güvercin sana!**\nhttps://tenor.com/view/pigeon-kick-funny-birds-gif-14470635")
+
+@bot.command()
+async def saat(ctx):
+    tr_time = get_turkey_time().strftime('%d/%m/%Y %H:%M:%S')
+    await ctx.send(f"⏰ **Güncel Türkiye Saati ve Tarihi:** {tr_time}")
+
+@bot.command()
+async def slaps(ctx, member: discord.Member):
+    await ctx.send(f"🖐️ {ctx.author.mention}, {member.mention} kullanıcısını Osmanlı tokadıyla uçurdu!\nhttps://tenor.com/view/slap-in-the-face-angry-gif-14689404")
+
+@bot.command()
+async def kiss(ctx, member: discord.Member):
+    await ctx.send(f"💋 {ctx.author.mention}, {member.mention} kullanıcısını sulu sulu öptü!\nhttps://tenor.com/view/anime-kiss-gif-25745155")
+
+@bot.command()
+async def sarıl(ctx, member: discord.Member):
+    await ctx.send(f"🤗 {ctx.author.mention}, {member.mention} kullanıcısına sımsıkı sarıldı!\nhttps://tenor.com/view/hug-anime-love-gif-25644292")
+
+@bot.command()
+async def askolcer(ctx, member: discord.Member):
+    oran = random.randint(0, 100)
+    await ctx.send(f"❤️ {ctx.author.mention} ile {member.mention} arasındaki aşk oranı: **%{oran}**")
+
+@bot.command()
+async def efkarolcer(ctx):
+    oran = random.randint(0, 100)
+    await ctx.send(f"🚬 {ctx.author.mention} bugünkü efkar durumun: **%{oran}**")
+
+@bot.command()
+async def sanslisayi(ctx):
+    sayi = random.randint(1, 100)
+    await ctx.send(f"🎲 {ctx.author.mention}, bugün senin şanslı sayın: **{sayi}**")
+
+@bot.command()
+async def ship(ctx):
+    members = [m for m in ctx.guild.members if not m.bot]
+    if len(members) < 2:
+        return
+    m1 = ctx.author
+    m2 = random.choice(members)
+    while m2.id == m1.id:
+        m2 = random.choice(members)
+    oran = random.randint(0, 100)
+    await ctx.send(f"💕 **Günün Shipi:** {m1.mention} X {m2.mention} | Kalp Oranı: **%{oran}**")
+
+@bot.command()
+async def ship2(ctx, member: discord.Member):
+    await ctx.send(f"💖 {ctx.author.mention} X {member.mention}\n**Aşk Oranı: %99999! Bu aşk ölçülemez!**")
+
+# --- EKONOMİ & OYUN ---
+@bot.command()
+async def para(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    bakiye = bts_puan.get(target.id, 100)
+    bts_puan[target.id] = bakiye
+    await ctx.send(f"💰 {target.mention}: **{bakiye} BTS Parası**")
+
+@bot.command()
+async def slots(ctx, miktar: int):
+    bakiye = bts_puan.get(ctx.author.id, 100)
+    if miktar <= 0 or miktar > bakiye:
+        await ctx.send("❌ Geçersiz miktar veya yetersiz bakiye!")
+        return
+    
+    slots_icons = ["🍒", "🍋", "🍇", "🍊", "💎"]
+    r1, r2, r3 = random.choice(slots_icons), random.choice(slots_icons), random.choice(slots_icons)
+    msg = f"🎰 **{ctx.author.name}** slots çeviriyor...\n| {r1} | {r2} | {r3} |\n"
+    
+    if r1 == r2 == r3:
+        odul = miktar * 4
+        bts_puan[ctx.author.id] = bakiye + odul
+        await ctx.send(msg + f"🔥 **MÜKEMMEL! 3'te 3 Yaptın!** {odul} BTS Parası kazandın!")
+    elif r1 == r2 or r2 == r3 or r1 == r3:
+        odul = miktar * 2
+        bts_puan[ctx.author.id] = bakiye + odul
+        await ctx.send(msg + f"✨ **Güzel! Çift yakaladın.** {odul} BTS Parası kazandın!")
+    else:
+        bts_puan[ctx.author.id] = bakiye - miktar
+        await ctx.send(msg + f"💥 **Kaybettin!** {miktar} BTS Parası cüzdanından uçtu.")
+
+# --- BİLGİ & SİSTEM ---
+@bot.command()
+async def spty(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    spotify_act = None
+    for act in target.activities:
+        if isinstance(act, discord.Spotify):
+            spotify_act = act
+            break
+            
+    if spotify_act:
+        embed = discord.Embed(title=f"🎵 {target.name} Spotify Dinliyor", color=discord.Color.green())
+        embed.add_field(name="Şarkı", value=spotify_act.title, inline=False)
+        embed.add_field(name="Sanatçı", value=", ".join(spotify_act.artists), inline=False)
+        embed.add_field(name="Albüm", value=spotify_act.album, inline=False)
+        embed.set_thumbnail(url=spotify_act.album_cover_url)
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(f"❌ {target.mention} şu an Spotify'da bir şey dinlemiyor veya durumu kapalı.")
+
+@bot.command()
+async def kullanici(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    embed = discord.Embed(title=f"👤 Kullanıcı Bilgisi: {target.name}", color=discord.Color.blue())
+    embed.add_field(name="Hesap Açılış Tarihi", value=target.created_at.strftime('%d/%m/%Y'), inline=True)
+    embed.add_field(name="Sunucuya Katılım", value=target.joined_at.strftime('%d/%m/%Y') if target.joined_at else "Bilinmiyor", inline=True)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def sunucu(ctx):
+    await ctx.send(f"🏰 **{ctx.guild.name}** Sunucu Üye Sayısı: **{ctx.guild.member_count}**")
+
+@bot.command()
+async def yardim(ctx):
+    embed = discord.Embed(title="📜 Ultra Gelişmiş Komut Menüsü", color=discord.Color.gold())
+    embed.add_field(name="🛡️ Yetkili & Yönetim", value="ayarlar, kufurengel, reklamengel, spamengel, logayarla, hosgeldin-ve-baybay-ayarla, karaliste, sil, sustur, ac, nuke, rolver, rolal, ban, kick, lock, unlock", inline=False)
+    embed.add_field(name="🎉 Eğlence & Etkileşim", value="afk, uçangüvercin, saat, slaps, kiss, sarıl, askolcer, efkarolcer, sanslisayi, ship, ship2", inline=False)
+    embed.add_field(name="💰 Ekonomi & Sistem", value="para, slots, spty, kullanici, sunucu", inline=False)
+    await ctx.send(embed=embed)
+
+keep_alive()
+bot.run(os.environ.get('DISCORD_BOT_TOKEN'))
