@@ -1,384 +1,375 @@
 import discord
 from discord.ext import commands
+from discord.ui import Button, View
 import random
 import asyncio
-import os
-from datetime import datetime, timedelta, timezone
-from threading import Thread
+import datetime
+import pytz
 from flask import Flask
+from threading import Thread
+import os
 
-# --- İLTİFAT VE SELAM LİSTELERİNİ ÇEKME VE KONTROL ---
-try:
-    from iltifatlar import iltifatlar, selam_cevaplari
-    
-    if len(iltifatlar) == 1 and isinstance(iltifatlar[0], list):
-        iltifat_listesi = iltifatlar[0]
-    else:
-        iltifat_listesi = iltifatlar
-        
-    if len(selam_cevaplari) == 1 and isinstance(selam_cevaplari[0], list):
-        selam_listesi = selam_cevaplari[0]
-    else:
-        selam_listesi = selam_cevaplari
-except ImportError:
-    iltifat_listesi = ["Harikasın! ✨", "Gözlerin parıldıyor! 🌟"]
-    selam_listesi = ["Hoş geldin canım! ⭐️", "Selamlar güzellik! 🥰"]
-    
-# --- FLASK WEB SERVER (Render Aktif Tutma İçin) ---
+# --- DIŞ DOSYADAN VERİ ÇEKME ---
+from iltifatlar import iltifatlar, selamlamalar
+
+# --- FLASK WEB SUNUCUSU (7/24 Aktif Tutmak İçin) ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot BTS is Active!"
+    return "Bot 7/24 Aktif ve Güvenli!"
 
 def run():
     app.run(host='0.0.0.0', port=10000)
 
 def keep_alive():
-    t = Thread(target=run)
-    t.start()
+    Thread(target=run).start()
 
 # --- BOT AYARLARI ---
-intents = discord.Intents.default()
-intents.messages = True
-intents.message_content = True
-intents.members = True
-intents.presences = True
+intents = discord.Intents.all()
 
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+class UltraBot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.remove_command('yardim')
 
-# --- VERİTABANI SİMÜLASYONU (Hafıza) ---
-sunucu_ayarlari = {
-    "kufur_engel": False,
-    "reklam_engel": False,
-    "spam_engel": False,
-    "log_kanal_id": None,
-    "welcome_kanal_id": None,
-    "kara_liste": ["piç", "sik", "orospu", "göt"]
+bot = UltraBot(command_prefix="!", intents=intents)
+
+# --- VERİTABANI VE AYARLAR SİMÜLASYONU ---
+server_settings = {
+    "kufurengel": False,
+    "reklamengel": False,
+    "spamengel": False,
+    "log_kanal": None,
+    "welcome_kanal": None,
+    "karaliste": ["pic", "orospu", "sik", "amk"]
 }
 
-user_data = {}  
-last_message_time = {} 
-afk_kullanicilar = {}
+bts_puan = {}
+afk_users = {}
+user_last_msg_time = {}
 
-def get_user(user_id):
-    if user_id not in user_data:
-        user_data[user_id] = {"para": 100}
-    return user_data[user_id]
-
-KUFUR_KOKLERI = ["amk", "aq", "orospu", "sik", "piç", "göt", "yarrak", "pezevenk", "pic", "yarrak", "am", "sg", "oropsu", "allahini", "kuranini"]
-REKLAM_UZANTILARI = ["http://", "https://", "discord.gg/", ".com", ".net", ".org", "www."]
-
-BTS_SORULARI = [
-    {"soru": "BTS hangi yıl çıkış yapmıştır?", "şıklar": ["A) 2010", "B) 2013", "C) 2015", "D) 2016"], "cevap": "B"},
-    {"soru": "BTS grubunun lideri kimdir?", "şıklar": ["A) Jimin", "B) Jungkook", "C) RM", "D) Suga"], "cevap": "C"},
-    {"soru": "BTS'in en büyük üyesi (Madnae) kimdir?", "şıklar": ["A) Jin", "B) J-Hope", "C) V", "D) RM"], "cevap": "A"},
-    {"soru": "BTS fandomunun adı nedir?", "şıklar": ["A) Blink", "B) Once", "C) ARMY", "D) EXO-L"], "cevap": "C"},
-    {"soru": "Grubun ana dansçısı ve umut kaynağı kimdir?", "şıklar": ["A) Suga", "B) J-Hope", "C) Jin", "D) V"], "cevap": "B"},
-    {"soru": "BTS'in 'Golden Maknae' unvanına sahip üyesi kimdir?", "şıklar": ["A) Jungkook", "B) Jimin", "C) V", "D) Suga"], "cevap": "A"}
+# --- BTS TRIVIA SORULARI HAVUZU (50 ADET) ---
+bts_sorulari = [
+    {"soru": "BTS hangi yıl çıkış yapmıştır?", "cevap": "2013", "siklar": ["2011", "2012", "2013", "2014"]},
+    {"soru": "BTS'in açılımı nedir?", "cevap": "Bangtan Sonyeondan", "siklar": ["Bangtan Boys", "Bangtan Sonyeondan", "Beyond The Scene", "Born To Slay"]},
+    {"soru": "BTS'in lideri kimdir?", "cevap": "RM", "siklar": ["Jin", "Suga", "RM", "Jimin"]},
+    {"soru": "BTS'in en büyük üyesi (en yaşlısı) kimdir?", "cevap": "Jin", "siklar": ["Jin", "Suga", "RM", "J-Hope"]},
+    {"soru": "BTS'in en küçük üyesi (maknae) kimdir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "RM"]},
+    {"soru": "BTS'in resmi fandom adı nedir?", "cevap": "A.R.M.Y", "siklar": ["BLINK", "A.R.M.Y", "EXO-L", "STAY"]},
+    {"soru": "BTS hangi şirketin çatısı altında kurulmuştur?", "cevap": "Big Hit (HYBE)", "siklar": ["SM", "YG", "JYP", "Big Hit (HYBE)"]},
+    {"soru": "BTS'in çıkış şarkısı hangisidir?", "cevap": "No More Dream", "siklar": ["No More Dream", "Boy In Luv", "Dope", "I Need U"]},
+    {"soru": "Hangi üyenin sahne adı 'V' harfinden oluşur?", "cevap": "Taehyung", "siklar": ["Jimin", "Taehyung", "Jungkook", "Suga"]},
+    {"soru": "BTS'in Billboard Hot 100 listesinde 1 numara olan ilk tamamen İngilizce şarkısı hangisidir?", "cevap": "Dynamite", "siklar": ["Butter", "Dynamite", "Life Goes On", "Permission to Dance"]},
+    {"soru": "Min Yoongi hangi üyenin gerçek adıdır?", "cevap": "Suga", "siklar": ["Suga", "J-Hope", "Jin", "RM"]},
+    {"soru": "Jung Hoseok'un sahne adı nedir?", "cevap": "J-Hope", "siklar": ["RM", "Suga", "J-Hope", "V"]},
+    {"soru": "BTS'in resmi rengi veya sembolikleşen rengi hangisidir?", "cevap": "Mor", "siklar": ["Pembe", "Mavi", "Mor", "Siyah"]},
+    {"soru": "'I purple you' (Sizi morluyorum) sözünü hangi üye literatüre kazandırmıştır?", "cevap": "V", "siklar": ["RM", "Jimin", "V", "Jungkook"]},
+    {"soru": "Suga'nın solo projelerinde kullandığı diğer sahne adı nedir?", "cevap": "Agust D", "siklar": ["Agust D", "Gloss", "Min PD", "Lil Meow"]},
+    {"soru": "Hangi BTS üyesi modern dans geçmişine sahiptir ve Busan Sanat Lisesi'ne birincilikle girmiştir?", "cevap": "Jimin", "siklar": ["J-Hope", "Jimin", "V", "Jungkook"]},
+    {"soru": "BTS'in 'Love Yourself' albüm serisinin ünlü başlık şarkısı hangisidir?", "cevap": "Fake Love", "siklar": ["DNA", "Fake Love", "Idol", "Run"]},
+    {"soru": "Hangi üye grubun 'Golden Maknae'si (Altın Küçük) olarak bilinir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "Jin"]},
+    {"soru": "BTS'in hayranları için tasarladığı resmi ışıklı çubuğun (lightstick) adı nedir?", "cevap": "Army Bomb", "siklar": ["Muster Stick", "Army Bomb", "Bangtan Light", "Purple Rod"]},
+    {"soru": "BTS, Birleşmiş Milletler (UN) genel kurulunda ilk kez hangi yıl konuşma yapmıştır?", "cevap": "2018", "siklar": ["2016", "2017", "2018", "2019"]},
+    {"soru": "BTS'in popüler reality şov programının adı nedir?", "cevap": "Run BTS!", "siklar": ["BTS In The Soop", "Run BTS!", "Rookie King", "American Hustle Life"]},
+    {"soru": "Kim Seokjin'in lakaplarından biri hangisidir?", "cevap": "Worldwide Handsome", "siklar": ["Worldwide Handsome", "Golden Boy", "Gucci Boy", "Sunshine"]},
+    {"soru": "Grubun ana dansçısı ve koreografi lideri kimdir?", "cevap": "J-Hope", "siklar": ["Jimin", "J-Hope", "Jungkook", "V"]},
+    {"soru": "BTS'in Line Friends ile işbirliği yaparak oluşturduğu karakter serisinin adı nedir?", "cevap": "BT21", "siklar": ["BTS-Toons", "BT21", "Bangtan Pets", "Line-BTS"]},
+    {"soru": "Jungkook'un BT21 karakterinin adı nedir?", "cevap": "Cooky", "siklar": ["Tata", "Chimmy", "Cooky", "Koya"]},
+    {"soru": "RM'in IQ seviyesinin kaç olduğu bilinmektedir?", "cevap": "148", "siklar": ["120", "135", "148", "160"]},
+    {"soru": "BTS'in Halsey ile düet yaptığı popüler şarkı hangisidir?", "cevap": "Boy With Luv", "siklar": ["Idol", "Boy With Luv", "On", "Stay Gold"]},
+    {"soru": "Suga'nın BT21 karakterinin adı nedir?", "cevap": "Shooky", "siklar": ["Shooky", "Mang", "RJ", "Van"]},
+    {"soru": "BTS'in hangi albümü onlara ilk kez bir Daesang (Yılın Albümü) ödülü kazandırmıştır?", "cevap": "The Most Beautiful Moment in Life: Young Forever", "siklar": ["Wings", "Dark & Wild", "The Most Beautiful Moment in Life: Young Forever", "Love Yourself: Tear"]},
+    {"soru": "Hangi şarkıda 'Geonbae (Şerefe)' kelimesi sıkça geçer ve parti havasındadır?", "cevap": "Dionysus", "siklar": ["Dionysus", "Fire", "Idol", "Dope"]},
+    {"soru": "BTS'in 2020 yılında çıkardığı 'Map of the Soul: 7' albümünün sert ve güçlü başlık şarkısı hangisidir?", "cevap": "ON", "siklar": ["Black Swan", "ON", "Louder Than Bombs", "Filter"]},
+    {"soru": "V'nin (Taehyung) oynadığı tarihi Kore dizisinin adı nedir?", "cevap": "Hwarang", "siklar": ["Hwarang", "Goblin", "The King", "Dream High"]},
+    {"soru": "Hangi üye solak olmasına rağmen sağ elini de çok aktif kullanabilir?", "cevap": "V", "siklar": ["RM", "Suga", "V", "Jimin"]},
+    {"soru": "Jimin'in solo şarkılarından biri hangisidir?", "cevap": "Lie", "siklar": ["Lie", "Awake", "Intro: Persona", "Epiphany"]},
+    {"soru": "BTS üyelerinden hangisi Daegu doğumludur?", "cevap": "Suga & V", "siklar": ["Suga & V", "RM & Jimin", "Jin & J-Hope", "Jungkook & Jin"]},
+    {"soru": "BTS'in hayır kurumu UNICEF ile birlikte yürüttüğü kampanyanın adı nedir?", "cevap": "Love Myself", "siklar": ["Save Me", "Love Myself", "End Violence", "Be Yourself"]},
+    {"soru": "J-Hope'un Becky G ile işbirliği yaptığı solo hit şarkısı hangisidir?", "cevap": "Chicken Noodle Soup", "siklar": ["More", "Arson", "Daydream", "Chicken Noodle Soup"]},
+    {"soru": "BTS'in Grammy Ödülleri'nde sahne alan ilk Koreli grup olduğu yıl hangisidir?", "cevap": "2020", "siklar": ["2018", "2019", "2020", "2021"]},
+    {"soru": "Jin'in BT21 karakteri olan beyaz alpakaya ne ad verilir?", "cevap": "RJ", "siklar": ["RJ", "Koya", "Tata", "Mang"]},
+    {"soru": "BTS'in 2016 yılında yayınlanan ve 'Kan, ter ve gözyaşlarımı al' sözleriyle bilinen ünlü şarkısı hangisidir?", "cevap": "Blood Sweat & Tears", "siklar": ["Wings", "Blood Sweat & Tears", "Save Me", "Fire"]},
+    {"soru": "Jungkook'un solo şarkısı 'Euphoria' hangi albüm projesinde yer alır?", "cevap": "Love Yourself: Answer", "siklar": ["Love Yourself: Tear", "Love Yourself: Her", "Love Yourself: Answer", "Wings"]},
+    {"soru": "RM'in BT21 karakteri olan uykucu koalanın adı nedir?", "cevap": "Koya", "siklar": ["Koya", "Shooky", "Mang", "Chimmy"]},
+    {"soru": "BTS'in 'Black Swan' şarkısının ilk koreografi videosunda hangi tarz dans ön plana çıkmıştır?", "cevap": "Modern Bale / Çağdaş Dans", "siklar": ["Hip-hop", "Breakdance", "Modern Bale / Çağdaş Dans", "Poping"]},
+    {"soru": "Suga'nın müzik yaparken ve piyano çalarken sıklıkla bahsettiği favori rengi nedir?", "cevap": "Kahverengi", "siklar": ["Siyah", "Beyaz", "Kahverengi", "Mavi"]},
+    {"soru": "BTS'in 'Yet To Come' konseri 2022 yılında Kore'nin hangi şehrinde gerçekleşmiştir?", "cevap": "Busan", "siklar": ["Seul", "Busan", "Incheon", "Daegu"]},
+    {"soru": "Hangi BTS klibi tren garı, lunapark ve kış temaları içerir, derin dostluğu anlatır?", "cevap": "Spring Day", "siklar": ["Spring Day", "Run", "I Need U", "Life Goes On"]},
+    {"soru": "J-Hope'un BT21 karakteri olan maskeli atın adı nedir?", "cevap": "Mang", "siklar": ["Mang", "Cooky", "Tata", "RJ"]},
+    {"soru": "BTS üyelerinin tamamının dostluk dövmesi olarak yaptırdığı sayı hangisidir?", "cevap": "7", "siklar": ["1", "7", "13", "0"]},
+    {"soru": "V'nin BT21 karakteri olan kalp kafalı uzaylının adı nedir?", "cevap": "Tata", "siklar": ["Tata", "Chimmy", "Koya", "RJ"]},
+    {"soru": "Jimin'in BT21 karakteri olan sarı kapüşonlu köpeğin adı nedir?", "cevap": "Chimmy", "siklar": ["Chimmy", "Cooky", "Shooky", "Van"]}
 ]
 
+def get_turkey_time():
+    return datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
+
+# --- ORTAK BUTONLU OYUN GÖRÜNÜMÜ ---
+class GameView(View):
+    def __init__(self, dogru_cevap, siklar):
+        super().__init__(timeout=15.0)
+        self.dogru_cevap = dogru_cevap
+        self.cevaplandi = False
+        for sik in siklar:
+            btn = Button(label=str(sik), style=discord.ButtonStyle.blurple)
+            btn.callback = self.make_callback(sik)
+            self.add_item(btn)
+
+    def make_callback(self, sik):
+        async def callback(interaction: discord.Interaction):
+            if self.cevaplandi:
+                await interaction.response.send_message("❌ Bu soru zaten cevaplandı!", ephemeral=True)
+                return
+            
+            if str(sik) == str(self.dogru_cevap):
+                self.cevaplandi = True
+                self.stop()
+                u_id = interaction.user.id
+                bts_puan[u_id] = bts_puan.get(u_id, 100) + 50
+                await interaction.response.send_message(f"🎉 Doğru Cevap! {interaction.user.mention} 50 BTS Parası kazandı! Yeni bakiye: {bts_puan[u_id]}")
+                await interaction.message.edit(view=None)
+            else:
+                await interaction.response.send_message("❌ Yanlış şık! Tekrar dene.", ephemeral=True)
+        return callback
+
+# --- EVENTLER ---
 @bot.event
 async def on_ready():
-    print(f"Bot {bot.user.name} olarak başarıyla giriş yaptı! 🌸🚀")
-    await bot.change_presence(activity=discord.Game(name="!yardim | BTS 💖"))
+    print(f"Bot {bot.user.name} olarak giriş yaptı.")
+    await bot.change_presence(activity=discord.Game(name="!yardim | Koruma & Eğlence"))
 
 @bot.event
 async def on_member_join(member):
-    kanal_id = sunucu_ayarlari["welcome_kanal_id"]
-    if kanal_id:
-        kanal = bot.get_channel(kanal_id)
-        if kanal:
-            secilen_selam = random.choice(selam_listesi)
-            await kanal.send(f"👑 **{member.mention}** geldi! {secilen_selam}")
+    if server_settings["welcome_kanal"]:
+        channel = bot.get_channel(server_settings["welcome_kanal"])
+        if channel:
+            await channel.send(f"📥 Hoş geldin {member.mention}! Sunucumuza neşe getirdin.")
 
 @bot.event
 async def on_member_remove(member):
-    kanal_id = sunucu_ayarlari["welcome_kanal_id"]
-    if kanal_id:
-        kanal = bot.get_channel(kanal_id)
-        if kanal:
-            await kanal.send(f"📤 **{member.name}** sunucudan ayrıldı, görüşmek üzere... 💔")
+    if server_settings["welcome_kanal"]:
+        channel = bot.get_channel(server_settings["welcome_kanal"])
+        if channel:
+            await channel.send(f"📤 **{member.name}** sunucudan ayrıldı. Görüşmek üzere!")
 
 @bot.event
 async def on_message(message):
+    # CRITICAL FIX: Botların kendi mesajlarını dinlemesini tamamen engeller. Çökmeyi önleyen en büyük önlem budur!
     if message.author.bot:
         return
 
-    if message.author.id in afk_kullanicilar:
-        afk_sure = datetime.now() - afk_kullanicilar[message.author.id]["zaman"]
-        dakika = int(afk_sure.total_seconds() / 60)
-        saniye = int(afk_sure.total_seconds() % 60)
-        
-        sure_metni = f"{dakika} dakika, {saniye} saniye" if dakika > 0 else f"{saniye} saniye"
-        
-        del afk_kullanicilar[message.author.id]
-        await message.channel.send(f"🌸 **{message.author.mention}** geri döndü! `{sure_metni}` boyunca buralarda yoktu, hoş geldin canım! 💕")
+    # --- AFK KONTROLÜ ---
+    if message.author.id in afk_users:
+        del afk_users[message.author.id]
+        await message.channel.send(f"👋 Hoş geldin {message.author.mention}! Artık AFK değilsin.", delete_after=5)
 
-    msg_lower = message.content.lower()
+    for mention in message.mentions:
+        if mention.id in afk_users:
+            await message.channel.send(f"⚠️ {message.author.mention}, etiketlediğin kullanıcı **{mention.name}** şu an AFK!\n**Sebep:** {afk_users[mention.id]}")
 
-    if msg_lower in ["sa", "selam", "slm", "merhaba", "mrb"]:
-        secilen_selam = random.choice(selam_listesi)
-        await message.channel.send(secilen_selam)
+    msg_content = message.content.lower()
+    log_kanal = bot.get_channel(server_settings["log_kanal"]) if server_settings["log_kanal"] else None
+
+    # SA-AS Sistemi
+    if msg_content == "sa":
+        rastgele_selam = random.choice(selamlamalar)
+        await message.channel.send(f"{rastgele_selam} {message.author.mention}!")
+
+    # Küfür Koruması
+    if server_settings["kufurengel"]:
+        for sansur in server_settings["karaliste"]:
+            if sansur in msg_content:
+                try:
+                    await message.delete()
+                    if log_kanal:
+                        await log_kanal.send(f"🚫 **Küfür Engellendi:** {message.author.mention} -> {message.content}")
+                except:
+                    pass
+                return
+
+    # Reklam Koruması
+    if server_settings["reklamengel"] and ("http" in msg_content or "discord.gg/" in msg_content):
+        try:
+            await message.delete()
+            if log_kanal:
+                await log_kanal.send(f"🔗 **Reklam Engellendi:** {message.author.mention} -> {message.content}")
+        except:
+            pass
         return
 
-    if sunucu_ayarlari["spam_engel"]:
-        now = datetime.now()
-        user_id = message.author.id
-        if user_id in last_message_time:
-            gecen_sure = (now - last_message_time[user_id]).total_seconds()
-            if gecen_sure < 1.0:
+    # Spam Engeli
+    if server_settings["spamengel"]:
+        now = datetime.datetime.now()
+        last_time = user_last_msg_time.get(message.author.id)
+        user_last_msg_time[message.author.id] = now
+        if last_time and (now - last_time).total_seconds() < 0.8:
+            try:
                 await message.delete()
-                await message.channel.send(f"⚠️ {message.author.mention}, çok hızlı mesaj gönderiyorsun!", delete_after=3)
-                return
-        last_message_time[user_id] = now
-
-    if sunucu_ayarlari["kufur_engel"]:
-        if any(kok in msg_lower for kok in KUFUR_KOKLERI) or any(kelime in msg_lower for kelime in sunucu_ayarlari["kara_liste"]):
-            await message.delete()
-            await message.channel.send(f"⚠️ {message.author.mention}, küfürlü/yasaklı kelime kullanmak yasaktır!", delete_after=5)
+                await message.channel.send(f"⚠️ {message.author.mention}, lütfen çok hızlı mesaj gönderme!", delete_after=3)
+            except:
+                pass
             return
 
-    if sunucu_ayarlari["reklam_engel"]:
-        if any(link in msg_lower for link in REKLAM_UZANTILARI):
-            await message.delete()
-            await message.channel.send(f"⚠️ {message.author.mention}, reklam/link paylaşımı yasaktır!", delete_after=5)
-            return
+    # --- ORANSAL TETİKLEYİCİLER ---
+    zar = random.random()
 
-    if random.random() < 0.03:
-        secilen_iltifat = random.choice(iltifat_listesi)
-        await message.channel.send(f"{message.author.mention} {secilen_iltifat}")
-            
-    if random.random() < 0.07:
-        if random.random() < 0.75:
-            sayi1 = random.randint(1, 20)
-            sayi2 = random.randint(1, 15)
+    # 1. %3 İhtimalle İltifat
+    if zar < 0.03:
+        await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
+        return
+
+    # 2. %2 İhtimalle BTS Trivia Sorusu
+    elif zar < 0.05:
+        soru_data = random.choice(bts_sorulari)
+        siklar = soru_data["siklar"].copy()
+        random.shuffle(siklar)
+        
+        view = GameView(soru_data["cevap"], siklar)
+        msg = await message.channel.send(f"💜 **BTS TRIVIA SORUSU!**\n**{soru_data['soru']}**\n*Doğru şıkkı işaretle! (Süre: 15sn)*", view=view)
+        
+        await asyncio.sleep(15)
+        if not view.cevaplandi:
+            try:
+                await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{soru_data['cevap']}** olacaktı.", view=None)
+            except:
+                pass
+        return
+
+    # 3. %7 İhtimalle MATEMATİK Sorusu (Çok Kolay, Orta veya Ultra Zor)
+    elif zar < 0.12:
+        seviye = random.choice(["cok_kolay", "orta_zor", "ultra_zor"])
+        
+        if seviye == "cok_kolay":
             islem = random.choice(["+", "-", "*"])
+            if islem == "*":
+                num1 = random.randint(2, 9)
+                num2 = random.randint(2, 9)
+            else:
+                num1 = random.randint(1, 15)
+                num2 = random.randint(1, 15)
+                
+            cevap = num1 + num2 if islem == "+" else (num1 - num2 if islem == "-" else num1 * num2)
             
-            if islem == "+": dogru_sonuc = sayi1 + sayi2
-            elif islem == "-": dogru_sonuc = sayi1 - sayi2
-            else: dogru_sonuc = sayi1 * sayi2
+            siklar = {cevap}
+            while len(siklar) < 4:
+                yanlis = cevap + random.randint(-5, 5)
+                siklar.add(yanlis)
 
-            yanlislar = set()
-            while len(yanlislar) < 3:
-                sapma = random.randint(-10, 10)
-                aday = dogru_sonuc + sapma
-                if aday != dogru_sonuc and aday > 0:
-                    yanlislar.add(aday)
+        elif seviye == "orta_zor":
+            islem = random.choice(["+", "-"])
+            num1 = random.randint(100, 800)
+            num2 = random.randint(100, 800)
+            cevap = num1 + num2 if islem == "+" else num1 - num2
             
-            sik_havuzu = [dogru_sonuc] + list(yanlislar)
-            random.shuffle(sik_havuzu)
+            siklar = {cevap}
+            while len(siklar) < 4:
+                yanlis = cevap + random.randint(-40, 40)
+                siklar.add(yanlis)
+
+        else: # ultra_zor
+            islem = "*"
+            num1 = random.randint(12, 45)
+            num2 = random.randint(12, 45)
+            cevap = num1 * num2
             
-            harfler = ["A", "B", "C", "D"]
-            siklar_metni = [f"{harfler[i]}) {sik_havuzu[i]}" for i in range(4)]
-            dogru_harf = harfler[sik_havuzu.index(dogru_sonuc)]
-            
-            soru_metni = f"🧮 **HIZLI MATEMATİK YARIŞMASI!**\nSoru: **{sayi1} {islem} {sayi2} = ?**"
-        else:
-            bts_soru = random.choice(BTS_SORULARI)
-            soru_metni = f"💜 **BTS BİLGİ YARIŞMASI!**\nSoru: **{bts_soru['soru']}**"
-            siklar_metni = bts_soru["şıklar"]
-            dogru_harf = bts_soru["cevap"]
+            siklar = {cevap}
+            while len(siklar) < 4:
+                sapma = random.randint(10, 120)
+                yanlis = cevap + random.choice([sapma, -sapma])
+                if yanlis != cevap:
+                    siklar.add(yanlis)
 
-        final_mesaj = f"{soru_metni}\n\n" + "\n".join(siklar_metni) + "\n\n*Cevap vermek için sadece harfi (**A, B, C veya D**) yazın! Süre 30 Saniye!*"
-        await message.channel.send(final_mesaj)
+        siklar_list = list(siklar)
+        random.shuffle(siklar_list)
+        
+        gosterim_islem = "x" if islem == "*" else islem
+        
+        view = GameView(cevap, siklar_list)
+        msg = await message.channel.send(f"📊 **MATEMATİK SORUSU! ({seviye.replace('_', ' ').upper()})**\n**{num1} {gosterim_islem} {num2} = ?**\n*Cevaplamak için 15 saniyen var!*", view=view)
+        
+        await asyncio.sleep(15)
+        if not view.cevaplandi:
+            try:
+                await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{cevap}** olacaktı.", view=None)
+            except:
+                pass
+        return
 
-        def check(m):
-            return m.channel == message.channel and m.content.strip().upper() == dogru_harf and not m.author.bot
-
-        try:
-            kazanan_mesaj = await bot.wait_for('message', check=check, timeout=30.0)
-            kazanan = kazanan_mesaj.author
-            user_profil = get_user(kazanan.id)
-            user_profil["para"] += 50
-            await message.channel.send(f"🎉 Tebrikler {kazanan.mention}! Doğru harfi (**{dogru_harf}**) bildin ve **50 BTS Parası** kazandın! 💰 Güncel Bakiye: {user_profil['para']} BTS")
-        except asyncio.TimeoutError:
-            await message.channel.send(f"⏰ Süre bitti! Doğru cevap **{dogru_harf}** şıkkı olmalıydı.")
-
+    # Komutların işlenmesini sağlar (Yalnızca bot olmayan gerçek kullanıcılar için)
     await bot.process_commands(message)
 
-# ====================================================================
-# 💤 AFK SİSTEMİ KOMUTU
-# ====================================================================
-
-@bot.command()
-async def afk(ctx, *, sebep: str = None):
-    if ctx.author.id in afk_kullanicilar:
-        del afk_kullanicilar[ctx.author.id]
-        await ctx.send(f"🌸 **{ctx.author.mention}**, AFK modun zaten açıktı, şimdi kapatıldı. Yeniden hoş geldin!")
-        return
-
-    if sebep is None:
-        tatli_mesajlar = [
-            "pofuduk yastığını aldı ve kısa süreliğine AFK moduna geçti... 💤",
-            "kahvesini tazelemek için minik bir mola verdi, hemen dönecek! ☕️",
-            "biraz dinlenmek için köşesine çekildi, gözleri buralarda olsun... ✨"
-        ]
-        afk_kullanicilar[ctx.author.id] = {"sebep": "Belirtilmedi", "zaman": datetime.now()}
-        await ctx.send(f"💤 **{ctx.author.mention}** {random.choice(tatli_mesajlar)}")
-    else:
-        afk_kullanicilar[ctx.author.id] = {"sebep": sebep, "zaman": datetime.now()}
-        await ctx.send(f"💤 **{ctx.author.mention}** AFK kaldı!\n**Sebep:** {sebep}")
-
-# ====================================================================
-# 🛡️ YETKİLİ & YÖNETİM KOMUTLARI
-# ====================================================================
-
+# --- YETKİLİ & YÖNETİM KOMUTLARI ---
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def ayarlar(ctx):
-    embed = discord.Embed(title="🛡️ Sunucu Filtre Ayarları", color=discord.Color.blue())
-    embed.add_field(name="🤬 Küfür Engeli", value="🟢 Aktif" if sunucu_ayarlari["kufur_engel"] else "🔴 Pasif", inline=True)
-    embed.add_field(name="🔗 Reklam Engeli", value="🟢 Aktif" if sunucu_ayarlari["reklam_engel"] else "🔴 Pasif", inline=True)
-    embed.add_field(name="⚡ Spam Engeli", value="🟢 Aktif" if sunucu_ayarlari["spam_engel"] else "🔴 Pasif", inline=True)
+    embed = discord.Embed(title="⚙️ Sunucu Ayarları", color=discord.Color.blue())
+    embed.add_field(name="Küfür Filtresi", value="✅ Aktif" if server_settings["kufurengel"] else "❌ Pasif")
+    embed.add_field(name="Reklam Filtresi", value="✅ Aktif" if server_settings["reklamengel"] else "❌ Pasif")
+    embed.add_field(name="Spam Filtresi", value="✅ Aktif" if server_settings["spamengel"] else "❌ Pasif")
+    embed.add_field(name="Log Kanalı", value=f"<#{server_settings['log_kanal']}>" if server_settings["log_kanal"] else "❌ Ayarlanmamış")
+    embed.add_field(name="Giriş-Çıkış Kanalı", value=f"<#{server_settings['welcome_kanal']}>" if server_settings["welcome_kanal"] else "❌ Ayarlanmamış")
     await ctx.send(embed=embed)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def kufurengel(ctx):
-    sunucu_ayarlari["kufur_engel"] = not sunucu_ayarlari["kufur_engel"]
-    await ctx.send(f"🤬 Küfür filtresi **{'açıldı 🟢' if sunucu_ayarlari['kufur_engel'] else 'kapatıldı 🔴'}**.")
+    server_settings["kufurengel"] = not server_settings["kufurengel"]
+    durum = 'AÇIK' if server_settings['kufurengel'] else 'KAPALI'
+    await ctx.send(f"🛡️ Küfür filtresi: **{durum}**")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def reklamengel(ctx):
-    sunucu_ayarlari["reklam_engel"] = not sunucu_ayarlari["reklam_engel"]
-    await ctx.send(f"🔗 Reklam filtresi **{'açıldı 🟢' if sunucu_ayarlari['reklam_engel'] else 'kapatıldı 🔴'}**.")
+    server_settings["reklamengel"] = not server_settings["reklamengel"]
+    durum = 'AÇIK' if server_settings['reklamengel'] else 'KAPALI'
+    await ctx.send(f"🛡️ Reklam filtresi: **{durum}**")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def spamengel(ctx):
-    sunucu_ayarlari["spam_engel"] = not sunucu_ayarlari["spam_engel"]
-    await ctx.send(f"⚡ Spam filtresi **{'açıldı 🟢' if sunucu_ayarlari['spam_engel'] else 'kapatıldı 🔴'}**.")
+    server_settings["spamengel"] = not server_settings["spamengel"]
+    durum = 'AÇIK' if server_settings['spamengel'] else 'KAPALI'
+    await ctx.send(f"🛡️ Spam filtresi: **{durum}**")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def logayarla(ctx, kanal: discord.TextChannel):
-    sunucu_ayarlari["log_kanal_id"] = kanal.id
-    await ctx.send(f"📋 Log kanalı {kanal.mention} yapıldı!")
+async def logayarla(ctx, channel: discord.TextChannel):
+    server_settings["log_kanal"] = channel.id
+    await ctx.send(f"✅ Log kanalı başarıyla {channel.mention} olarak ayarlandı!")
 
 @bot.command(name="hosgeldin-ve-baybay-ayarla")
 @commands.has_permissions(administrator=True)
-async def welcome_ayarla(ctx, kanal: discord.TextChannel):
-    sunucu_ayarlari["welcome_kanal_id"] = kanal.id
-    await ctx.send(f"👋 Giriş-Çıkış kanalı {kanal.mention} yapıldı!")
+async def welcomeayarla(ctx, channel: discord.TextChannel):
+    server_settings["welcome_kanal"] = channel.id
+    await ctx.send(f"✅ Giriş-Çıkış mesaj kanalı {channel.mention} olarak ayarlandı!")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def karaliste(ctx, islem=None, *, kelime=None):
+    if not islem:
+        await ctx.send(f"📝 **Yasaklı Kelimeler:** {', '.join(server_settings['karaliste'])}")
+    elif islem == "ekle" and kelime:
+        if kelime.lower() not in server_settings["karaliste"]:
+            server_settings["karaliste"].append(kelime.lower())
+            await ctx.send(f"✅ **{kelime}** yasaklı kelime listesine eklendi.")
+    elif islem == "cikar" and kelime:
+        if kelime.lower() in server_settings["karaliste"]:
+            server_settings["karaliste"].remove(kelime.lower())
+            await ctx.send(f"✅ **{kelime}** yasaklı kelime listesinden çıkarıldı.")
 
 @bot.command()
 @commands.has_permissions(manage_messages=True)
 async def sil(ctx, sayi: int):
     await ctx.channel.purge(limit=sayi + 1)
-    await ctx.send(f"🗑️ **{sayi}** adet mesaj temizlendi.", delete_after=3)
-
-# ====================================================================
-# 🎮 EĞLENCE & ETKİLEŞİM KOMUTLARI
-# ====================================================================
+    await ctx.send(f"🗑️ **{sayi}** adet mesaj temizlendi.", delete_after=4)
 
 @bot.command()
-async def slaps(ctx, member: discord.Member):
-    gifs = [
-        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbms1OXVwMTN0bXl6cXp3dWptb3Y2Zmxtb3AwYm5kdmsyeDlybzg2ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/GceBmw5whL17gB7K4H/giphy.gif",
-        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnptamR3ZXdrb3dndG5hZXlyYmRpdndmZmtwYW92MWx3NWFxajc2MCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Zau0yrl17uzdEXiD9S/giphy.gif"
-    ]
-    await ctx.send(f"👋 {ctx.author.mention}, {member.mention} üyesini evire çevire tokatladı!\n{random.choice(gifs)}")
-
-@bot.command()
-async def kiss(ctx, member: discord.Member):
-    gifs = [
-        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXN6dW55b3A0aW9oMnlpdDdmN2psdmMxZmk1bmptNmV0ZHp0ZnppZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/FqSPe99hkAo6S07SdB/giphy.gif",
-        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbDVqNjhvZnYyeDQwM3I1OGNlbWFpZDVxcWoxbms5ajYxbGwwbXJzMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QGc8RgRvOB9F869p1D/giphy.gif"
-    ]
-    await ctx.send(f"💋 {ctx.author.mention}, {member.mention} üyesine kocaman sulu bir öpücük kondurdu!\n{random.choice(gifs)}")
-
-@bot.command()
-async def sarıl(ctx, member: discord.Member):
-    gifs = [
-        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHIwd3p3Nm9tdTBoMDdtNjhyMzJsdWFmOHI0c2xkbXZ4ZDR6eWx6biZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/lrr9rHuoJOE0w/giphy.gif",
-        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW8zYno2MWp6Z3Z2bnY2bTZreHZreW40aDJ5eGZsdXBnOXBrY2txNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5OqXb948EBkyUcnwHt/giphy.gif"
-    ]
-    await ctx.send(f"🤗 {ctx.author.mention}, {member.mention} üyesine sımsıkı sarıldı!\n{random.choice(gifs)}")
-
-@bot.command(name="uçangüvercin")
-async def ucanguvercin(ctx, member: discord.Member):
-    gif = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXZuMWV1amMxNXl5cDZ3dW80dG9nNnk4Yzg5dXBveTN5d3Q1NndhdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l3q2K1M66D069Jp6M/giphy.gif"
-    await ctx.send(f"🕊️ {member.mention}, Çatık kaşlı bir güvercin uçarak sana doğru geliyor... **Tekme atıyor bu güvercin sana!** 🥊💥\n{gif}")
-
-@bot.command()
-async def askolcer(ctx, member: discord.Member):
-    await ctx.send(f"❤️ {ctx.author.mention} ile {member.mention} arasındaki aşk oranı: **%{random.randint(0, 100)}**")
-
-@bot.command()
-async def efkarolcer(ctx):
-    await ctx.send(f"🚬 {ctx.author.mention} o anki efkar durumun: **%{random.randint(0, 100)}** yak yak...")
-
-@bot.command()
-async def sanslisayi(ctx):
-    await ctx.send(f"🍀 {ctx.author.mention}, bugün senin şanslı sayın: **{random.randint(1, 100)}**")
-
-@bot.command()
-async def ship(ctx):
-    aktifs = [m for m in ctx.guild.members if not m.bot and m != ctx.author]
-    if not aktifs: return await ctx.send("Kullanıcı bulunamadı.")
-    await ctx.send(f"💖 **Şans Eseri Shiplendiniz!** \n💞 {ctx.author.mention} & {random.choice(aktifs).mention} \n💘 Aşk Oranı: **%{random.randint(0, 100)}**")
-
-@bot.command()
-async def ship2(ctx, member: discord.Member):
-    await ctx.send(f"❤️‍🔥 **AMANSIZ BİR AŞK!** \n💞 {ctx.author.mention} & {member.mention} \n🔥 Aşk Oranı: **%99999** \n🏆 *Bu aşk ölçülemez, siz birbiriniz için yaratılmışsınız!*")
-
-@bot.command()
-async def saat(ctx):
-    tz_turkey = timezone(timedelta(hours=3))
-    su_an = datetime.now(tz_turkey).strftime("%H:%M:%S")
-    tarih = datetime.now(tz_turkey).strftime("%d/%m/%Y")
-    await ctx.send(f"⏰ {ctx.author.mention}, şu an canlı zaman dilimi:\n📅 Tarih: **{tarih}**\n⏱️ Saat: **{su_an}**")
-
-# ====================================================================
-# 💰 EKONOMİ & CÜZDAN SİSTEMİ
-# ====================================================================
-
-@bot.command()
-async def para(ctx, member: discord.Member = None):
-    hedef = member or ctx.author
-    profil = get_user(hedef.id)
-    await ctx.send(f"💰 {hedef.mention} cüzdanında **{profil['para']} BTS Parası** var.")
-
-@bot.command()
-async def slots(ctx, miktar: int):
-    profil = get_user(ctx.author.id)
-    
-    if miktar <= 0:
-        await ctx.send("❌ Lütfen 0'dan büyük geçerli bir para miktarı girin canım!")
-        return
-        
-    if profil["para"] < miktar:
-        await ctx.send(f"❌ Cüzdanında yeterli para yok tatlım! Güncel Bakiyen: **{profil['para']} BTS**")
-        return
-    
-    emojiler = ["🍒", "🍋", "🍇", "💎", "🔔"]
-    s1, s2, s3 = random.choice(emojiler), random.choice(emojiler), random.choice(emojiler)
-    
-    mesaj = await ctx.send("🎰 **Slots makinesi dönüyor...**")
-    await asyncio.sleep(1.5)
-    
-    if s1 == s2 == s3:
-        kazanc = miktar * 4
-        profil["para"] += kazanc
-        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n🎉 **MÜKEMMEL! 3'te 3 YAPTIN!** \n💰 **+{kazanc} BTS** kazandın! Yeni Bakiyen: **{profil['para']} BTS**")
-    elif s1 == s2 or s2 == s3 or s1 == s3:
-        kazanc = int(miktar * 1.5)
-        profil["para"] += kazanc
-        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n✨ **Çift Yakaladın!** \n💰 **+{kazanc} BTS** kazandın! Yeni Bakiyen: **{profil['para']} BTS**")
-    else:
-        profil["para"] -= miktar
-        await mesaj.edit(content=f"[ {s1} | {s2} | {s3} ]\n😭 **Şanssız günündesin, kaybettin!** \n💸 **-{miktar} BTS** cüzdandan gitti. Kalan Bakiyen: **{profil['para']} BTS**")
-
-@bot.command()
-async def yardim(ctx):
-    embed = discord.Embed(title="🤖 BTS Bot Komut Menüsü", color=discord.Color.green())
-    embed.add_field(name="🛡️ Yönetim", value="`!ayarlar`, `!kufurengel`, `!reklamengel`, `!spamengel`, `!sil [sayı]`", inline=False)
-    embed.add_field(name="💤 Durum Sistemi", value="`!afk`, `!afk [sebep]`", inline=False)
-    embed.add_field(name="🎮 Eğlence & Etkileşim", value="`!slaps`, `!kiss`, `!sarıl`, `!uçangüvercin`, `!askolcer`, `!efkarolcer`, `!sanslisayi`, `!ship`, `!ship2`, `!saat`", inline=False)
-    embed.add_field(name="💰 Ekonomi", value="`!para`, `!slots [miktar]`", inline=False)
-    await ctx.send(embed=embed)
-
-keep_alive()
-bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+@commands.has_permissions(moderate_members=True)
+async def sustur(ctx, member: discord.Member, sure: str, *, sebep="Belirtilmedi"):
+    time_dict = {"m": 1, "h": 60, "d": 1440}
+    unit = sure[-1]
+    if unit not in time_dict or not sure[:-1].isdigit():
+        await ctx.send("❌ Geçersiz süre formatı! Örn: 5m, 2h, 1d")
+     
