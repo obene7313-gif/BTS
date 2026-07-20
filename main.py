@@ -10,7 +10,11 @@ from threading import Thread
 import os
 
 # --- DIŞ DOSYADAN VERİ ÇEKME ---
-from iltifatlar import iltifatlar, selamlamalar
+try:
+    from iltifatlar import iltifatlar, selamlamalar
+except ImportError:
+    iltifatlar = ["Çok tatlısın!", "Bugün harika görünüyorsun!", "Harikasın!"]
+    selamlamalar = ["Aleykümselam, hoş geldin", "Selam! Naber?"]
 
 # --- FLASK WEB SUNUCUSU (7/24 Aktif Tutmak İçin) ---
 app = Flask('')
@@ -57,7 +61,7 @@ bts_sorulari = [
     {"soru": "BTS'in en büyük üyesi (en yaşlısı) kimdir?", "cevap": "Jin", "siklar": ["Jin", "Suga", "RM", "J-Hope"]},
     {"soru": "BTS'in en küçük üyesi (maknae) kimdir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "RM"]},
     {"soru": "BTS'in resmi fandom adı nedir?", "cevap": "A.R.M.Y", "siklar": ["BLINK", "A.R.M.Y", "EXO-L", "STAY"]},
-    {"soru": "BTS hangi şirketin çatısı altında kurulmuştur?", "cevap": "Big Hit (HYBE)", "siklar": ["SM", "YG", "JYP", "Big Hit (HYBE)"]},
+    {"soru": "BTS hangi şirketetin çatısı altında kurulmuştur?", "cevap": "Big Hit (HYBE)", "siklar": ["SM", "YG", "JYP", "Big Hit (HYBE)"]},
     {"soru": "BTS'in çıkış şarkısı hangisidir?", "cevap": "No More Dream", "siklar": ["No More Dream", "Boy In Luv", "Dope", "I Need U"]},
     {"soru": "Hangi üyenin sahne adı 'V' harfinden oluşur?", "cevap": "Taehyung", "siklar": ["Jimin", "Taehyung", "Jungkook", "Suga"]},
     {"soru": "BTS'in Billboard Hot 100 listesinde 1 numara olan ilk tamamen İngilizce şarkısı hangisidir?", "cevap": "Dynamite", "siklar": ["Butter", "Dynamite", "Life Goes On", "Permission to Dance"]},
@@ -156,18 +160,18 @@ async def on_member_remove(member):
 
 @bot.event
 async def on_message(message):
-    # CRITICAL FIX: Botların kendi mesajlarını dinlemesini tamamen engeller. Çökmeyi önleyen en büyük önlem budur!
     if message.author.bot:
         return
 
     # --- AFK KONTROLÜ ---
     if message.author.id in afk_users:
         del afk_users[message.author.id]
-        await message.channel.send(f"👋 Hoş geldin {message.author.mention}! Artık AFK değilsin.", delete_after=5)
+        await message.channel.send(f"👋 Hoş geldin {message.author.mention}! Tekrar aktifsin, AFK modun kapatıldı.", delete_after=5)
 
     for mention in message.mentions:
         if mention.id in afk_users:
-            await message.channel.send(f"⚠️ {message.author.mention}, etiketlediğin kullanıcı **{mention.name}** şu an AFK!\n**Sebep:** {afk_users[mention.id]}")
+            sebep = afk_users[mention.id]
+            await message.channel.send(f"⚠️ {message.author.mention}, etiketlediğin kullanıcı **{mention.name}** şu an AFK!\n**Sebep:** {sebep}")
 
     msg_content = message.content.lower()
     log_kanal = bot.get_channel(server_settings["log_kanal"]) if server_settings["log_kanal"] else None
@@ -218,6 +222,7 @@ async def on_message(message):
     # 1. %3 İhtimalle İltifat
     if zar < 0.03:
         await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
+        await bot.process_commands(message)
         return
 
     # 2. %2 İhtimalle BTS Trivia Sorusu
@@ -235,9 +240,10 @@ async def on_message(message):
                 await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{soru_data['cevap']}** olacaktı.", view=None)
             except:
                 pass
+        await bot.process_commands(message)
         return
 
-    # 3. %7 İhtimalle MATEMATİK Sorusu (Çok Kolay, Orta veya Ultra Zor)
+    # 3. %7 İhtimalle MATEMATİK Sorusu
     elif zar < 0.12:
         seviye = random.choice(["cok_kolay", "orta_zor", "ultra_zor"])
         
@@ -295,11 +301,11 @@ async def on_message(message):
                 await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{cevap}** olacaktı.", view=None)
             except:
                 pass
+        await bot.process_commands(message)
         return
 
-    # Komutların işlenmesini sağlar (Yalnızca bot olmayan gerçek kullanıcılar için)
+    # Eğer hiçbir ihtimal tetiklenmediyse komutları normal şekilde yürütür
     await bot.process_commands(message)
-
 # --- YETKİLİ & YÖNETİM KOMUTLARI ---
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -431,9 +437,13 @@ async def unlock(ctx):
 
 # --- AFK SİSTEMİ ---
 @bot.command()
-async def afk(ctx, *, sebep="Belirtilmedi"):
-    afk_users[ctx.author.id] = sebep
-    await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin!\n**Sebep:** {sebep}")
+async def afk(ctx, *, sebep=None):
+    if sebep is None:
+        afk_users[ctx.author.id] = "Belirtilmedi"
+        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin! İlk yazıldığında aktifleşirsin tatlış bir şey.")
+    else:
+        afk_users[ctx.author.id] = sebep
+        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin!\n**Sebep:** {sebep}")
 
 # --- EĞLENCE & ETKİLEŞİM KOMUTLARI ---
 @bot.command()
@@ -559,5 +569,7 @@ async def yardim(ctx):
     embed.add_field(name="💰 Ekonomi & Sistem", value="para, slots, spty, kullanici, sunucu", inline=False)
     await ctx.send(embed=embed)
 
+# --- BOTU BAŞLATMA ---
 keep_alive()
 bot.run(os.environ.get('DISCORD_BOT_TOKEN'))
+            
