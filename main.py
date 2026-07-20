@@ -157,17 +157,12 @@ async def on_member_remove(member):
         channel = bot.get_channel(server_settings["welcome_kanal"])
         if channel:
             await channel.send(f"📤 **{member.name}** sunucudan ayrıldı. Görüşmek üzere!")
-
-@bot.event
+            @bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    # --- AFK KONTROLÜ ---
-    if message.author.id in afk_users:
-        del afk_users[message.author.id]
-        await message.channel.send(f"👋 Hoş geldin {message.author.mention}! Tekrar aktifsin, AFK modun kapatıldı.", delete_after=5)
-
+    # --- AFK ETİKET KONTROLÜ ---
     for mention in message.mentions:
         if mention.id in afk_users:
             sebep = afk_users[mention.id]
@@ -216,13 +211,17 @@ async def on_message(message):
                 pass
             return
 
+    # --- KOMUT KONTROLÜ ---
+    if message.content.startswith(bot.command_prefix):
+        await bot.process_commands(message)
+        return
+
     # --- ORANSAL TETİKLEYİCİLER ---
     zar = random.random()
 
     # 1. %3 İhtimalle İltifat
     if zar < 0.03:
         await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
-        await bot.process_commands(message)
         return
 
     # 2. %2 İhtimalle BTS Trivia Sorusu
@@ -240,7 +239,6 @@ async def on_message(message):
                 await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{soru_data['cevap']}** olacaktı.", view=None)
             except:
                 pass
-        await bot.process_commands(message)
         return
 
     # 3. %7 İhtimalle MATEMATİK Sorusu
@@ -301,11 +299,8 @@ async def on_message(message):
                 await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{cevap}** olacaktı.", view=None)
             except:
                 pass
-        await bot.process_commands(message)
         return
 
-    # Eğer hiçbir ihtimal tetiklenmediyse komutları normal şekilde yürütür
-    await bot.process_commands(message)
 # --- YETKİLİ & YÖNETİM KOMUTLARI ---
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -435,15 +430,20 @@ async def unlock(ctx):
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
     await ctx.send("🔓 Kanal tekrar yazışmaya açıldı.")
 
-# --- AFK SİSTEMİ ---
+# --- İKİ AŞAMALI AFK SİSTEMİ ---
 @bot.command()
 async def afk(ctx, *, sebep=None):
+    if ctx.author.id in afk_users:
+        del afk_users[ctx.author.id]
+        await ctx.send(f"👋 Hoş geldin {ctx.author.mention}! Tekrar aktifsin tatlış, AFK modun kapatıldı.", delete_after=5)
+        return
+
     if sebep is None:
         afk_users[ctx.author.id] = "Belirtilmedi"
-        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin! İlk yazıldığında aktifleşirsin tatlış bir şey.")
+        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin! Kapatmak için tekrar `!afk` yazman yeterli.")
     else:
         afk_users[ctx.author.id] = sebep
-        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin!\n**Sebep:** {sebep}")
+        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin!\n**Sebep:** {sebep}\n*Kapatmak için tekrar `!afk` yazman yeterli.*")
 
 # --- EĞLENCE & ETKİLEŞİM KOMUTLARI ---
 @bot.command()
@@ -480,7 +480,7 @@ async def efkarolcer(ctx):
 @bot.command()
 async def sanslisayi(ctx):
     sayi = random.randint(1, 100)
-    await ctx.send(f"🎲 {ctx.author.mention}, bugün senin şanslı sayın: **{sayi}**")
+    await ctx.send(f"🎲 {ctx.author.mention}, today senin şanslı sayın: **{sayi}**")
 
 @bot.command()
 async def ship(ctx):
