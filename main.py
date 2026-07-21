@@ -9,12 +9,12 @@ from flask import Flask
 from threading import Thread
 import os
 
-# --- DIŞ DOSYADAN VERİ ÇEKME ---
+# --- DIŞ DOSYADAN VERİ ÇEKME (TAM EŞLEŞME) ---
 try:
-    from iltifatlar import iltifatlar, selamlamalar
+    from iltifatlar import iltifatlar, selam_cevaplari
 except ImportError:
     iltifatlar = ["Çok tatlısın!", "Bugün harika görünüyorsun!", "Harikasın!"]
-    selamlamalar = ["Aleykümselam, hoş geldin", "Selam! Naber?"]
+    selam_cevaplari = ["Aleykümselam, hoş geldin", "Selam! Naber?"]
 
 # --- FLASK WEB SUNUCUSU ---
 app = Flask('')
@@ -46,7 +46,7 @@ server_settings = {
     "spamengel": False,
     "log_kanal": None,
     "welcome_kanal": None,
-    "karaliste": ["pic", "orospu", "sik", "piç", "oç", "oc", "amcik", "yarram", "kahpe", "sg", "siktir", "fuck"]
+    "karaliste": ["pic", "orospu", "sik", "amk"]
 }
 
 bts_puan = {}
@@ -61,7 +61,7 @@ bts_sorulari = [
     {"soru": "BTS'in en büyük üyesi (en yaşlısı) kimdir?", "cevap": "Jin", "siklar": ["Jin", "Suga", "RM", "J-Hope"]},
     {"soru": "BTS'in en küçük üyesi (maknae) kimdir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "RM"]},
     {"soru": "BTS'in resmi fandom adı nedir?", "cevap": "A.R.M.Y", "siklar": ["BLINK", "A.R.M.Y", "EXO-L", "STAY"]},
-    {"soru": "BTS hangi şirketetin çatısı altında kurulmuştur?", "cevap": "Big Hit (HYBE)", "siklar": ["SM", "YG", "JYP", "Big Hit (HYBE)"]},
+    {"soru": "BTS hangi şirketetetin çatısı altında kurulmuştur?", "cevap": "Big Hit (HYBE)", "siklar": ["SM", "YG", "JYP", "Big Hit (HYBE)"]},
     {"soru": "BTS'in çıkış şarkısı hangisidir?", "cevap": "No More Dream", "siklar": ["No More Dream", "Boy In Luv", "Dope", "I Need U"]},
     {"soru": "Hangi üyenin sahne adı 'V' harfinden oluşur?", "cevap": "Taehyung", "siklar": ["Jimin", "Taehyung", "Jungkook", "Suga"]},
     {"soru": "BTS'in Billboard Hot 100 listesinde 1 numara olan ilk tamamen İngilizce şarkısı hangisidir?", "cevap": "Dynamite", "siklar": ["Butter", "Dynamite", "Life Goes On", "Permission to Dance"]},
@@ -163,7 +163,12 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    # AFK Etiket Kontrolü
+    # 1. Önce Komutları Çalıştır
+    if message.content.startswith(bot.command_prefix):
+        await bot.process_commands(message)
+        return
+
+    # 2. AFK Etiket Kontrolü
     for mention in message.mentions:
         if mention.id in afk_users:
             sebep = afk_users[mention.id]
@@ -172,10 +177,11 @@ async def on_message(message):
     msg_content = message.content.lower()
     log_kanal = bot.get_channel(server_settings["log_kanal"]) if server_settings["log_kanal"] else None
 
-    # SA-AS
-    if msg_content == "sa":
-        rastgele_selam = random.choice(selamlamalar)
-        await message.channel.send(f"{rastgele_selam} {message.author.mention}!")
+    # SA-AS (Artık 100 farklı selam cümlesinden rastgele çeker!)
+    if msg_content == "sa" or msg_content == "selam" or msg_content == "sa hq":
+        rastgele_selam = random.choice(selam_cevaplari)
+        await message.channel.send(f"{message.author.mention} {rastgele_selam}")
+        return
 
     # Küfür Koruması
     if server_settings["kufurengel"]:
@@ -212,15 +218,10 @@ async def on_message(message):
                 pass
             return
 
-    # Komut Kontrolü
-    if message.content.startswith(bot.command_prefix):
-        await bot.process_commands(message)
-        return
-
     # Oransal Tetikleyiciler
     zar = random.random()
 
-    # 1. %3 İltifat
+    # 1. %3 İltifat (300 farklı iltifattan çeker!)
     if zar < 0.03:
         await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
         return
@@ -378,7 +379,7 @@ async def sustur(ctx, member: discord.Member, sure: str, *, sebep="Belirtilmedi"
     minutes = int(sure[:-1]) * time_dict[unit]
     duration = datetime.timedelta(minutes=minutes)
     await member.timeout(duration, reason=sebep)
-    await ctx.send(f"🤐  {member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
+    await ctx.send(f"🤐 {member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
 
 @bot.command()
 @commands.has_permissions(moderate_members=True)
@@ -481,7 +482,7 @@ async def efkarolcer(ctx):
 @bot.command()
 async def sanslisayi(ctx):
     sayi = random.randint(1, 100)
-    await ctx.send(f"🎲 {ctx.author.mention}, today senin şanslı sayın: **{sayi}**")
+    await ctx.send(f"🎲 {ctx.author.mention}, bugün senin şanslı sayın: **{sayi}**")
 
 @bot.command()
 async def ship(ctx):
