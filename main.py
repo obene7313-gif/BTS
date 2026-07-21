@@ -16,7 +16,7 @@ except ImportError:
     iltifatlar = ["Çok tatlısın!", "Bugün harika görünüyorsun!", "Harikasın!"]
     selamlamalar = ["Aleykümselam, hoş geldin", "Selam! Naber?"]
 
-# --- FLASK WEB SUNUCUSU (7/24 Aktif Tutmak İçin) ---
+# --- FLASK WEB SUNUCUSU ---
 app = Flask('')
 
 @app.route('/')
@@ -39,7 +39,7 @@ class UltraBot(commands.Bot):
 
 bot = UltraBot(command_prefix="!", intents=intents)
 
-# --- VERİTABANI VE AYARLAR SİMÜLASYONU ---
+# --- VERİTABANI VE AYARLAR ---
 server_settings = {
     "kufurengel": False,
     "reklamengel": False,
@@ -53,7 +53,7 @@ bts_puan = {}
 afk_users = {}
 user_last_msg_time = {}
 
-# --- BTS TRIVIA SORULARI HAVUZU (50 ADET) ---
+# --- BTS TRIVIA SORULARI (50 ADET) ---
 bts_sorulari = [
     {"soru": "BTS hangi yıl çıkış yapmıştır?", "cevap": "2013", "siklar": ["2011", "2012", "2013", "2014"]},
     {"soru": "BTS'in açılımı nedir?", "cevap": "Bangtan Sonyeondan", "siklar": ["Bangtan Boys", "Bangtan Sonyeondan", "Beyond The Scene", "Born To Slay"]},
@@ -110,7 +110,7 @@ bts_sorulari = [
 def get_turkey_time():
     return datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
 
-# --- ORTAK BUTONLU OYUN GÖRÜNÜMÜ ---
+# --- BUTONLU OYUN GÖRÜNÜMÜ ---
 class GameView(View):
     def __init__(self, dogru_cevap, siklar):
         super().__init__(timeout=15.0)
@@ -157,12 +157,13 @@ async def on_member_remove(member):
         channel = bot.get_channel(server_settings["welcome_kanal"])
         if channel:
             await channel.send(f"📤 **{member.name}** sunucudan ayrıldı. Görüşmek üzere!")
-            @bot.event
+
+@bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    # --- AFK ETİKET KONTROLÜ ---
+    # AFK Etiket Kontrolü
     for mention in message.mentions:
         if mention.id in afk_users:
             sebep = afk_users[mention.id]
@@ -171,7 +172,7 @@ async def on_message(message):
     msg_content = message.content.lower()
     log_kanal = bot.get_channel(server_settings["log_kanal"]) if server_settings["log_kanal"] else None
 
-    # SA-AS Sistemi
+    # SA-AS
     if msg_content == "sa":
         rastgele_selam = random.choice(selamlamalar)
         await message.channel.send(f"{rastgele_selam} {message.author.mention}!")
@@ -211,20 +212,20 @@ async def on_message(message):
                 pass
             return
 
-    # --- KOMUT KONTROLÜ ---
+    # Komut Kontrolü
     if message.content.startswith(bot.command_prefix):
         await bot.process_commands(message)
         return
 
-    # --- ORANSAL TETİKLEYİCİLER ---
+    # Oransal Tetikleyiciler
     zar = random.random()
 
-    # 1. %3 İhtimalle İltifat
+    # 1. %3 İltifat
     if zar < 0.03:
         await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
         return
 
-    # 2. %2 İhtimalle BTS Trivia Sorusu
+    # 2. %2 BTS Sorusu
     elif zar < 0.05:
         soru_data = random.choice(bts_sorulari)
         siklar = soru_data["siklar"].copy()
@@ -241,7 +242,7 @@ async def on_message(message):
                 pass
         return
 
-    # 3. %7 İhtimalle MATEMATİK Sorusu
+    # 3. %7 Matematik Sorusu
     elif zar < 0.12:
         seviye = random.choice(["cok_kolay", "orta_zor", "ultra_zor"])
         
@@ -272,7 +273,7 @@ async def on_message(message):
                 yanlis = cevap + random.randint(-40, 40)
                 siklar.add(yanlis)
 
-        else: # ultra_zor
+        else:
             islem = "*"
             num1 = random.randint(12, 45)
             num2 = random.randint(12, 45)
@@ -301,7 +302,7 @@ async def on_message(message):
                 pass
         return
 
-# --- YETKİLİ & YÖNETİM KOMUTLARI ---
+# --- YETKİLİ KOMUTLARI ---
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def ayarlar(ctx):
@@ -377,7 +378,7 @@ async def sustur(ctx, member: discord.Member, sure: str, *, sebep="Belirtilmedi"
     minutes = int(sure[:-1]) * time_dict[unit]
     duration = datetime.timedelta(minutes=minutes)
     await member.timeout(duration, reason=sebep)
-    await ctx.send(f"🤐 {member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
+    await ctx.send(f"🤐  member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
 
 @bot.command()
 @commands.has_permissions(moderate_members=True)
@@ -445,7 +446,7 @@ async def afk(ctx, *, sebep=None):
         afk_users[ctx.author.id] = sebep
         await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin!\n**Sebep:** {sebep}\n*Kapatmak için tekrar `!afk` yazman yeterli.*")
 
-# --- EĞLENCE & ETKİLEŞİM KOMUTLARI ---
+# --- EĞLENCE KOMUTLARI ---
 @bot.command()
 async def uçangüvercin(ctx, member: discord.Member):
     await ctx.send(f"🕊️ {ctx.author.mention}, {member.mention} kullanıcısına uçarak gelen çatık kaşlı bir güvercin fırlattı!\n**Tekme atıyor bu güvercin sana!**\nhttps://tenor.com/view/pigeon-kick-funny-birds-gif-14470635")
@@ -572,4 +573,3 @@ async def yardim(ctx):
 # --- BOTU BAŞLATMA ---
 keep_alive()
 bot.run(os.environ.get('DISCORD_BOT_TOKEN'))
-            
