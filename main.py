@@ -369,15 +369,13 @@ async def on_message(message):
         
         view = GameView(cevap, siklar_list)
      msg = await message.channel.send(f"📊 **MATEMATİK SORUSU! ({seviye.replace('_', ' ').upper()})**\n**{num1} {gosterim_islem} {num2} = ?**\n*Cevaplamak için 15 saniyen var!*", view=view)
-...
-await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{cevap}** olacaktı.", view=None)
+
 
         
         await asyncio.sleep(15)
         if not view.cevaplandi:
-            try:
-                await msg.edit(content=f"â±ï¸ SÃ¼re doldu! DoÄŸru cevap **{cevap}** olacaktÄ±.", view=None)
-            except:
+            try:await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{cevap}** olacaktı.", view=None)
+                except:
                 pass
         return
 
