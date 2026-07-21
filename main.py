@@ -368,8 +368,10 @@ async def on_message(message):
         gosterim_islem = "x" if islem == "*" else islem
         
         view = GameView(cevap, siklar_list)
-        msg = await message.channel.send(f"ğŸ“Š **MATEMATÄ°K SORUSU! ({seviye.replace('_', ' ').upper()})**\n**{num1} {gosterim_islem} {num2} = ?**\n*Cevaplamak iÃ§in 15 saniyen var!*", view=view)
-        
+     msg = await message.channel.send(f"📊 **MATEMATİK SORUSU! ({seviye.replace('_', ' ').upper()})**\n**{num1} {gosterim_islem} {num2} = ?**\n*Cevaplamak için 15 saniyen var!*", view=view)
+...
+await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{cevap}** olacaktı.", view=None)
+
         
         await asyncio.sleep(15)
         if not view.cevaplandi:
