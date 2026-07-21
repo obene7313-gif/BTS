@@ -391,4 +391,166 @@ async def ayarlar(ctx):
     embed.add_field(name="Log KanalÄ±", value=f"<#{server_settings['log_kanal']}>" if server_settings["log_kanal"] else "âŒ AyarlanmamÄ±ÅŸ")
     embed.add_field(name="GiriÅŸ-Ã‡Ä±kÄ±ÅŸ KanalÄ±", value=f"<#{server_settings['welcome_kanal']}>" if server_settings["welcome_kanal"] else "âŒ AyarlanmamÄ±ÅŸ")
     await ctx.send(embed=embed)
+    sarÄ±ldÄ±!\nhttps://tenor.com/view/hug-anime-love-gif-25644292")
+    
+@bot.command()
+async def Ã¶p(ctx, member: discord.Member):
+    await ctx.send(f"ğŸ¤— {ctx.author.mention}, {member.mention} kullanÄ±cÄ±sÄ±nÄ± Ã¶pÃ¼cÃ¼ÄŸe boÄŸdu. https://klipy.com/gifs/kiss-video-love-you")
+    
+@bot.command()
+async def kiss(ctx, member: discord.Member):
+    await ctx.send(f"ğŸ¤— {ctx.author.mention}, {member.mention} kullanÄ±cÄ±sÄ±nÄ± Ã¶pÃ¼cÃ¼ÄŸe boÄŸdu. https://klipy.com/gifs/kiss-video-love-you")
 
+@bot.command()
+async def askolcer(ctx, member: discord.Member):
+    oran = random.randint(0, 100)
+    await ctx.send(f"â¤ï¸ {ctx.author.mention} ile {member.mention} arasÄ±ndaki aÅŸk oranÄ±: **%{oran}**")
+
+@bot.command()
+async def efkarolcer(ctx):
+    oran = random.randint(0, 100)
+    await ctx.send(f"ğŸš¬ {ctx.author.mention} bugÃ¼nkÃ¼ efkar durumun: **%{oran}**")
+
+@bot.command()
+async def sansolcer(ctx):
+    oran = random.randint(0, 100)
+    await ctx.send(f"ğŸ€ {ctx.author.mention} bugÃ¼nkÃ¼ ÅŸans durumun: **%{oran}**")
+
+class BTSSelect(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label=isim, emoji=veri["emoji"])
+            for isim, veri in BTS_MEMBERS.items()
+        ]
+
+        super().__init__(
+            placeholder="Bir BTS Ã¼yesi seÃ§...",
+            options=options
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        uye = BTS_MEMBERS[self.values[0]]
+
+        embed = discord.Embed(
+            title=f"{uye['emoji']} {self.values[0]}",
+            color=uye["renk"]
+        )
+
+        embed.add_field(name="GerÃ§ek AdÄ±", value=uye["isim"], inline=False)
+        embed.add_field(name="DoÄŸum Tarihi", value=uye["dogum"], inline=False)
+        embed.add_field(name="GÃ¶revi", value=uye["gorev"], inline=False)
+        embed.set_footer(text="ğŸ’œ BTS Bilgi MenÃ¼sÃ¼")
+
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+class BTSView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=60)
+        self.add_item(BTSSelect())
+
+@bot.command()
+async def bts(ctx):
+    embed = discord.Embed(
+        title="ğŸ’œ BTS Bilgi MenÃ¼sÃ¼",
+        description="AÅŸaÄŸÄ±daki menÃ¼den bir BTS Ã¼yesi seÃ§.",
+        color=discord.Color.purple()
+    )
+
+    await ctx.send(embed=embed, view=BTSView())
+
+
+@bot.command()
+async def sanslisayi(ctx):
+    sayi = random.randint(1, 100)
+    await ctx.send(f"ğŸ² {ctx.author.mention}, bugÃ¼n senin ÅŸanslÄ± sayÄ±n: **{sayi}**")
+
+@bot.command()
+async def ship(ctx):
+    members = [m for m in ctx.guild.members if not m.bot]
+    if len(members) < 2:
+        return
+    m1 = ctx.author
+    m2 = random.choice(members)
+    while m2.id == m1.id:
+        m2 = random.choice(members)
+    oran = random.randint(0, 100)
+    await ctx.send(f"ğŸ’• **GÃ¼nÃ¼n Shipi:** {m1.mention} X {m2.mention} | Kalp OranÄ±: **%{oran}**")
+
+@bot.command()
+async def ship2(ctx, member: discord.Member):
+    await ctx.send(f"ğŸ’– {ctx.author.mention} X {member.mention}\n**AÅŸk OranÄ±: %99999! Bu aÅŸk Ã¶lÃ§Ã¼lemez!**")
+
+# --- EKONOMÄ° & OYUN ---
+@bot.command()
+async def para(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    bakiye = bts_puan.get(target.id, 100)
+    bts_puan[target.id] = bakiye
+    await ctx.send(f"ğŸ’° {target.mention}: **{bakiye} BTS ParasÄ±**")
+
+@bot.command()
+async def slots(ctx, miktar: int):
+    bakiye = bts_puan.get(ctx.author.id, 100)
+    if miktar <= 0 or miktar > bakiye:
+        await ctx.send("âŒ GeÃ§ersiz miktar veya yetersiz bakiye!")
+        return
+    
+    slots_icons = ["ğŸ’", "ğŸ‹", "ğŸ‡", "ğŸŠ", "ğŸ’"]
+    r1, r2, r3 = random.choice(slots_icons), random.choice(slots_icons), random.choice(slots_icons)
+    msg = f"ğŸ° **{ctx.author.name}** slots Ã§eviriyor...\n| {r1} | {r2} | {r3} |\n"
+    
+    if r1 == r2 == r3:
+        odul = miktar * 4
+        bts_puan[ctx.author.id] = bakiye + odul
+        await ctx.send(msg + f"ğŸ”¥ **MÃœKEMMEL! 3'te 3 YaptÄ±n!** {odul} BTS ParasÄ± kazandÄ±n!")
+    elif r1 == r2 or r2 == r3 or r1 == r3:
+        odul = miktar * 2
+        bts_puan[ctx.author.id] = bakiye + odul
+        await ctx.send(msg + f"âœ¨ **GÃ¼zel! Ã‡ift yakaladÄ±n.** {odul} BTS ParasÄ± kazandÄ±n!")
+    else:
+        bts_puan[ctx.author.id] = bakiye - miktar
+        await ctx.send(msg + f"ğŸ’¥ **Kaybettin!** {miktar} BTS ParasÄ± cÃ¼zdanÄ±ndan uÃ§tu.")
+        
+#--- BÄ°LGÄ° & SÄ°STEM ---
+@bot.command()
+async def spty(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    spotify_act = None
+    for act in target.activities:
+        if isinstance(act, discord.Spotify):
+            spotify_act = act
+            break
+            
+    if spotify_act:
+        embed = discord.Embed(title=f"ğŸµ {target.name} Spotify Dinliyor", color=discord.Color.green())
+        embed.add_field(name="ÅarkÄ±", value=spotify_act.title, inline=False)
+        embed.add_field(name="SanatÃ§Ä±", value=", ".join(spotify_act.artists), inline=False)
+        embed.add_field(name="AlbÃ¼m", value=spotify_act.album, inline=False)
+        embed.set_thumbnail(url=spotify_act.album_cover_url)
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(f"âŒ {target.mention} ÅŸu an Spotify'da bir ÅŸey dinlemiyor veya durumu kapalÄ±.")
+
+@bot.command()
+async def kullanici(ctx, member: discord.Member = None):
+    target = member or ctx.author
+    embed = discord.Embed(title=f"ğŸ‘¤ KullanÄ±cÄ± Bilgisi: {target.name}", color=discord.Color.blue())
+    embed.add_field(name="Hesap AÃ§Ä±lÄ±ÅŸ Tarihi", value=target.created_at.strftime('%d/%m/%Y'), inline=True)
+    embed.add_field(name="Sunucuya KatÄ±lÄ±m", value=target.joined_at.strftime('%d/%m/%Y') if target.joined_at else "Bilinmiyor", inline=True)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def sunucu(ctx):
+    await ctx.send(f"ğŸ° **{ctx.guild.name}** Sunucu Ãœye SayÄ±sÄ±: **{ctx.guild.member_count}**")
+
+@bot.command()
+async def yardim(ctx):
+    embed = discord.Embed(title="ğŸ“œ Ultra GeliÅŸmiÅŸ Komut MenÃ¼sÃ¼", color=discord.Color.gold())
+    embed.add_field(name="ğŸ›¡ï¸ Yetkili & YÃ¶netim", value="ayarlar, kufurengel, reklamengel, spamengel, logayarla, hosgeldin-ve-baybay-ayarla, karaliste, sil, sustur, ac, nuke, rolver, rolal, ban, kick, lock, unlock", inline=False)
+    embed.add_field(name="ğŸ‰ EÄŸlence & EtkileÅŸim", value="afk, uÃ§angÃ¼vercin, saat, slaps, kiss, sarÄ±l, askolcer, efkarolcer, sanslisayi, ship, ship2", inline=False)
+    embed.add_field(name="ğŸ’° Ekonomi & Sistem", value="para, slots, spty, kullanici, sunucu", inline=False)
+    await ctx.send(embed=embed)
+
+# --- BOTU BAÅLATMA ---
+keep_alive()
+bot.run(os.environ.get('DISCORD_BOT_TOKEN'))
