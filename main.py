@@ -46,7 +46,7 @@ server_settings = {
     "spamengel": False,
     "log_kanal": None,
     "welcome_kanal": None,
-    "karaliste": ["pic", "orospu", "sik", "amk"]
+    "karaliste": ["pic", "orospu", "sik", "piç", "oç", "oc", "amcik", "yarram", "kahpe", "sg", "siktir", "fuck"]
 }
 
 bts_puan = {}
