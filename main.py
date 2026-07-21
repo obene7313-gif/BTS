@@ -160,8 +160,7 @@ BTS_MEMBERS = {
 
 def get_turkey_time():
     return datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
-
-# --- BUTONLU OYUN GÃ–RÃœNÃœMÃœ ---
+    # --- BUTONLU OYUN GÃ–RÃœNÃœMÃœ ---
 class GameView(View):
     def __init__(self, dogru_cevap, siklar):
         super().__init__(timeout=15.0)
@@ -391,7 +390,194 @@ async def ayarlar(ctx):
     embed.add_field(name="Log KanalÄ±", value=f"<#{server_settings['log_kanal']}>" if server_settings["log_kanal"] else "âŒ AyarlanmamÄ±ÅŸ")
     embed.add_field(name="GiriÅŸ-Ã‡Ä±kÄ±ÅŸ KanalÄ±", value=f"<#{server_settings['welcome_kanal']}>" if server_settings["welcome_kanal"] else "âŒ AyarlanmamÄ±ÅŸ")
     await ctx.send(embed=embed)
-    sarÄ±ldÄ±!\nhttps://tenor.com/view/hug-anime-love-gif-25644292")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def kufurengel(ctx):
+    server_settings["kufurengel"] = not server_settings["kufurengel"]
+    durum = 'AÃ‡IK' if server_settings['kufurengel'] else 'KAPALI'
+    await ctx.send(f"ğŸ›¡ï¸ KÃ¼fÃ¼r filtresi: **{durum}**")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def reklamengel(ctx):
+    server_settings["reklamengel"] = not server_settings["reklamengel"]
+    durum = 'AÃ‡IK' if server_settings['reklamengel'] else 'KAPALI'
+    await ctx.send(f"ğŸ›¡ï¸ Reklam filtresi: **{durum}**")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def spamengel(ctx):
+    server_settings["spamengel"] = not server_settings["spamengel"]
+    durum = 'AÃ‡IK' if server_settings['spamengel'] else 'KAPALI'
+    await ctx.send(f"ğŸ›¡ï¸ Spam filtresi: **{durum}**")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def logayarla(ctx, channel: discord.TextChannel):
+    server_settings["log_kanal"] = channel.id
+    await ctx.send(f"âœ… Log kanalÄ± baÅŸarÄ±yla {channel.mention} olarak ayarlandÄ±!")
+
+@bot.command(name="hosgeldin-ve-baybay-ayarla")
+@commands.has_permissions(administrator=True)
+async def welcomeayarla(ctx, channel: discord.TextChannel):
+    server_settings["welcome_kanal"] = channel.id
+    await ctx.send(f"âœ… GiriÅŸ-Ã‡Ä±kÄ±ÅŸ mesaj kanalÄ± {channel.mention} olarak ayarlandÄ±!")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def karaliste(ctx, islem=None, *, kelime=None):
+    if not islem:
+        await ctx.send(f"ğŸ“ **YasaklÄ± Kelimeler:** {', '.join(server_settings['karaliste'])}")
+    elif islem == "ekle" and kelime:
+        if kelime.lower() not in server_settings["karaliste"]:
+            server_settings["karaliste"].append(kelime.lower())
+            await ctx.send(f"âœ… **{kelime}** yasaklÄ± kelime listesine eklendi.")
+    elif islem == "cikar" and kelime:
+        if kelime.lower() in server_settings["karaliste"]:
+            server_settings["karaliste"].remove(kelime.lower())
+            await ctx.send(f"âœ… **{kelime}** yasaklÄ± kelime listesinden Ã§Ä±karÄ±ldÄ±.")
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def sil(ctx, sayi: int):
+    await ctx.channel.purge(limit=sayi + 1)
+    await ctx.send(f"ğŸ—‘ï¸ **{sayi}** adet mesaj temizlendi.", delete_after=4)
+
+@bot.command()
+@commands.has_permissions(moderate_members=True)
+async def sustur(ctx, member: discord.Member, sure: str, *, sebep="Belirtilmedi"):
+    time_dict = {"m": 1, "h": 60, "d": 1440}
+    unit = sure[-1]
+    if unit not in time_dict or not sure[:-1].isdigit():
+        await ctx.send("âŒ GeÃ§ersiz sÃ¼re formatÄ±! Ã–rn: 5m, 2h, 1d")
+        return
+    minutes = int(sure[:-1]) * time_dict[unit]
+    duration = datetime.timedelta(minutes=minutes)
+    await member.timeout(duration, reason=sebep)
+    await ctx.send(f"ğŸ¤ {member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
+
+@bot.command()
+@commands.has_permissions(moderate_members=True)
+async def ac(ctx, member: discord.Member):
+    await member.timeout(None)
+    await ctx.send(f"ğŸ”Š {member.mention} kullanÄ±cÄ±sÄ±nÄ±n susturulmasÄ± kaldÄ±rÄ±ldÄ±.")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def nuke(ctx):
+    pos = ctx.channel.position
+    new_ch = await ctx.channel.clone(reason="Nuke Ä°ÅŸlemi")
+    await ctx.channel.delete()
+    await new_ch.edit(position=pos)
+    await new_ch.send("ğŸ’¥ Kanal baÅŸarÄ±yla sÄ±fÄ±rlandÄ± (Nuke)!\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464835")
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def rolver(ctx, member: discord.Member, role: discord.Role):
+    await member.add_roles(role)
+    await ctx.send(f"âœ… {member.mention} isimli Ã¼yeye **{role.name}** rolÃ¼ verildi.")
+
+@bot.command()
+@commands.has_permissions(manage_roles=True)
+async def rolal(ctx, member: discord.Member, role: discord.Role):
+    await member.remove_roles(role)
+    await ctx.send(f"âœ… {member.mention} isimli Ã¼yeden **{role.name}** rolÃ¼ geri alÄ±ndÄ±.")
+
+@bot.command()
+@commands.has_permissions(ban_members=True)
+async def ban(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
+    await member.ban(reason=sebep)
+    await ctx.send(f"ğŸ”¨ **{member.name}** sunucudan banlandÄ±. Sebep: {sebep}")
+
+@bot.command()
+@commands.has_permissions(kick_members=True)
+async def kick(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
+    await member.kick(reason=sebep)
+    await ctx.send(f"ğŸ‘¢ **{member.name}** sunucudan atÄ±ldÄ±. Sebep: {sebep}")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def lock(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
+    await ctx.send("ğŸ”’ Kanal yazÄ±ÅŸmaya kapatÄ±ldÄ±!")
+
+@bot.command()
+async def ping(ctx):
+    latency = round(bot.latency * 1000)
+    await ctx.send(f"ğŸ“ Pong! Gecikme: **{latency}ms**")
+
+@bot.command()
+@commands.has_permissions(manage_channels=True)
+async def unlock(ctx):
+    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
+    await ctx.send("ğŸ”“ Kanal tekrar yazÄ±ÅŸmaya aÃ§Ä±ldÄ±.")
+
+# --- Ä°KÄ° AÅAMALI AFK SÄ°STEMÄ° ---
+@bot.command()
+async def afk(ctx, *, sebep=None):
+    if ctx.author.bot:
+        return
+
+    # AFK'dan Ã§Ä±k
+    if ctx.author.id in afk_users:
+        veri = afk_users.pop(ctx.author.id)
+        gecen = datetime.datetime.now() - veri["zaman"]
+        gun = gecen.days
+        saat, kalan = divmod(gecen.seconds, 3600)
+        dakika, saniye = divmod(kalan, 60)
+
+        sure = []
+
+        if gun:
+            sure.append(f"{gun} gÃ¼n")
+        if saat:
+            sure.append(f"{saat} saat")
+        if dakika:
+            sure.append(f"{dakika} dakika")
+        if saniye:
+            sure.append(f"{saniye} saniye")
+
+        embed = discord.Embed(title="ğŸ‘‹ AFK Modu KapatÄ±ldÄ±", description=f"Tekrar hoÅŸ geldin {ctx.author.mention}!", color=discord.Color.green())
+
+        embed.add_field(name="â³ AFK SÃ¼resi",value=", ".join(sure) if sure else "1 saniyeden az",inline=False)
+        await ctx.send(embed=embed)
+        return
+
+    if not sebep:
+        sebep = "Sebep belirtilmedi."
+
+    afk_users[ctx.author.id] = {"sebep": sebep, "zaman": datetime.datetime.now()}
+
+    embed = discord.Embed(title="ğŸ’¤ AFK Modu AÃ§Ä±ldÄ±", color=discord.Color.orange())
+
+    embed.add_field(name="ğŸ‘¤ KullanÄ±cÄ±", value=ctx.author.mention, inline=False)
+
+    embed.add_field(name="ğŸ“ Sebep", value=sebep, inline=False)
+    embed.set_footer(text="AFK modundan Ã§Ä±kmak iÃ§in tekrar !afk yaz.")
+    await ctx.send(embed=embed)
+
+# --- EÄLENCE KOMUTLARI ---
+@bot.command()
+async def uÃ§angÃ¼vercin(ctx, member: discord.Member):
+    await ctx.send(f"ğŸ•Šï¸ {ctx.author.mention}, {member.mention} kullanÄ±cÄ±sÄ±na uÃ§arak gelen Ã§atÄ±k kaÅŸlÄ± bir gÃ¼vercin fÄ±rlattÄ±!\n**Tekme atÄ±yor bu gÃ¼vercin sana!**\nhttps://tenor.com/view/pigeon-kick-funny-birds-gif-14470635")
+
+@bot.command()
+async def saat(ctx):
+    tr_time = get_turkey_time().strftime('%d/%m/%Y %H:%M:%S')
+    await ctx.send(f"â° **GÃ¼ncel TÃ¼rkiye Saati ve Tarihi:** {tr_time}")
+
+@bot.command()
+async def slaps(ctx, member: discord.Member):
+    await ctx.send(f"ğŸ–ï¸ {ctx.author.mention}, {member.mention} kullanÄ±cÄ±sÄ±nÄ± OsmanlÄ± tokadÄ±yla uÃ§urdu!\nhttps://tenor.com/view/slap-in-the-face-angry-gif-14689404")
+
+@bot.command()
+async def kiss(ctx, member: discord.Member):
+    await ctx.send(f"ğŸ’‹ {ctx.author.mention}, {member.mention} kullanÄ±cÄ±sÄ±nÄ± sulu sulu Ã¶ptÃ¼!\nhttps://tenor.com/view/anime-kiss-gif-25745155")
+
+@bot.command()
+async def sarÄ±l(ctx, member: discord.Member):
+    await ctx.send(f"ğŸ¤— {ctx.author.mention}, {member.mention} kullanÄ±cÄ±sÄ±na sÄ±msÄ±kÄ± sarÄ±ldÄ±!\nhttps://tenor.com/view/hug-anime-love-gif-25644292")
     
 @bot.command()
 async def Ã¶p(ctx, member: discord.Member):
@@ -510,8 +696,8 @@ async def slots(ctx, miktar: int):
     else:
         bts_puan[ctx.author.id] = bakiye - miktar
         await ctx.send(msg + f"ğŸ’¥ **Kaybettin!** {miktar} BTS ParasÄ± cÃ¼zdanÄ±ndan uÃ§tu.")
-        
-#--- BÄ°LGÄ° & SÄ°STEM ---
+
+# --- BÄ°LGÄ° & SÄ°STEM ---
 @bot.command()
 async def spty(ctx, member: discord.Member = None):
     target = member or ctx.author
