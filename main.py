@@ -9,19 +9,19 @@ from flask import Flask
 from threading import Thread
 import os
 
-# --- DIŞ DOSYADAN VERİ ÇEKME (TAM EŞLEŞME) ---
+# --- DIÅ DOSYADAN VERÄ° Ã‡EKME (TAM EÅLEÅME) ---
 try:
     from iltifatlar import iltifatlar, selam_cevaplari
 except ImportError:
-    iltifatlar = ["Çok tatlısın!", "Bugün harika görünüyorsun!", "Harikasın!"]
-    selam_cevaplari = ["Aleykümselam, hoş geldin", "Selam! Naber?"]
+    iltifatlar = ["Ã‡ok tatlÄ±sÄ±n!", "BugÃ¼n harika gÃ¶rÃ¼nÃ¼yorsun!", "HarikasÄ±n!"]
+    selam_cevaplari = ["AleykÃ¼mselam, hoÅŸ geldin", "Selam! Naber?"]
 
 # --- FLASK WEB SUNUCUSU ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot 7/24 Aktif ve Güvenli!"
+    return "Bot 7/24 Aktif ve GÃ¼venli!"
 
 def run():
     app.run(host='0.0.0.0', port=10000)
@@ -39,7 +39,7 @@ class UltraBot(commands.Bot):
 
 bot = UltraBot(command_prefix="!", intents=intents)
 
-# --- VERİTABANI VE AYARLAR ---
+# --- VERÄ°TABANI VE AYARLAR ---
 server_settings = {
     "kufurengel": False,
     "reklamengel": False,
@@ -55,62 +55,113 @@ user_last_msg_time = {}
 
 # --- BTS TRIVIA SORULARI (50 ADET) ---
 bts_sorulari = [
-    {"soru": "BTS hangi yıl çıkış yapmıştır?", "cevap": "2013", "siklar": ["2011", "2012", "2013", "2014"]},
-    {"soru": "BTS'in açılımı nedir?", "cevap": "Bangtan Sonyeondan", "siklar": ["Bangtan Boys", "Bangtan Sonyeondan", "Beyond The Scene", "Born To Slay"]},
+    {"soru": "BTS hangi yÄ±l Ã§Ä±kÄ±ÅŸ yapmÄ±ÅŸtÄ±r?", "cevap": "2013", "siklar": ["2011", "2012", "2013", "2014"]},
+    {"soru": "BTS'in aÃ§Ä±lÄ±mÄ± nedir?", "cevap": "Bangtan Sonyeondan", "siklar": ["Bangtan Boys", "Bangtan Sonyeondan", "Beyond The Scene", "Born To Slay"]},
     {"soru": "BTS'in lideri kimdir?", "cevap": "RM", "siklar": ["Jin", "Suga", "RM", "Jimin"]},
-    {"soru": "BTS'in en büyük üyesi (en yaşlısı) kimdir?", "cevap": "Jin", "siklar": ["Jin", "Suga", "RM", "J-Hope"]},
-    {"soru": "BTS'in en küçük üyesi (maknae) kimdir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "RM"]},
-    {"soru": "BTS'in resmi fandom adı nedir?", "cevap": "A.R.M.Y", "siklar": ["BLINK", "A.R.M.Y", "EXO-L", "STAY"]},
-    {"soru": "BTS hangi şirketetetin çatısı altında kurulmuştur?", "cevap": "Big Hit (HYBE)", "siklar": ["SM", "YG", "JYP", "Big Hit (HYBE)"]},
-    {"soru": "BTS'in çıkış şarkısı hangisidir?", "cevap": "No More Dream", "siklar": ["No More Dream", "Boy In Luv", "Dope", "I Need U"]},
-    {"soru": "Hangi üyenin sahne adı 'V' harfinden oluşur?", "cevap": "Taehyung", "siklar": ["Jimin", "Taehyung", "Jungkook", "Suga"]},
-    {"soru": "BTS'in Billboard Hot 100 listesinde 1 numara olan ilk tamamen İngilizce şarkısı hangisidir?", "cevap": "Dynamite", "siklar": ["Butter", "Dynamite", "Life Goes On", "Permission to Dance"]},
-    {"soru": "Min Yoongi hangi üyenin gerçek adıdır?", "cevap": "Suga", "siklar": ["Suga", "J-Hope", "Jin", "RM"]},
-    {"soru": "Jung Hoseok'un sahne adı nedir?", "cevap": "J-Hope", "siklar": ["RM", "Suga", "J-Hope", "V"]},
-    {"soru": "BTS'in resmi rengi veya sembolikleşen rengi hangisidir?", "cevap": "Mor", "siklar": ["Pembe", "Mavi", "Mor", "Siyah"]},
-    {"soru": "'I purple you' (Sizi morluyorum) sözünü hangi üye literatüre kazandırmıştır?", "cevap": "V", "siklar": ["RM", "Jimin", "V", "Jungkook"]},
-    {"soru": "Suga'nın solo projelerinde kullandığı diğer sahne adı nedir?", "cevap": "Agust D", "siklar": ["Agust D", "Gloss", "Min PD", "Lil Meow"]},
-    {"soru": "Hangi BTS üyesi modern dans geçmişine sahiptir ve Busan Sanat Lisesi'ne birincilikle girmiştir?", "cevap": "Jimin", "siklar": ["J-Hope", "Jimin", "V", "Jungkook"]},
-    {"soru": "BTS'in 'Love Yourself' albüm serisinin ünlü başlık şarkısı hangisidir?", "cevap": "Fake Love", "siklar": ["DNA", "Fake Love", "Idol", "Run"]},
-    {"soru": "Hangi üye grubun 'Golden Maknae'si (Altın Küçük) olarak bilinir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "Jin"]},
-    {"soru": "BTS'in hayranları için tasarladığı resmi ışıklı çubuğun (lightstick) adı nedir?", "cevap": "Army Bomb", "siklar": ["Muster Stick", "Army Bomb", "Bangtan Light", "Purple Rod"]},
-    {"soru": "BTS, Birleşmiş Milletler (UN) genel kurulunda ilk kez hangi yıl konuşma yapmıştır?", "cevap": "2018", "siklar": ["2016", "2017", "2018", "2019"]},
-    {"soru": "BTS'in popüler reality şov programının adı nedir?", "cevap": "Run BTS!", "siklar": ["BTS In The Soop", "Run BTS!", "Rookie King", "American Hustle Life"]},
-    {"soru": "Kim Seokjin'in lakaplarından biri hangisidir?", "cevap": "Worldwide Handsome", "siklar": ["Worldwide Handsome", "Golden Boy", "Gucci Boy", "Sunshine"]},
-    {"soru": "Grubun ana dansçısı ve koreografi lideri kimdir?", "cevap": "J-Hope", "siklar": ["Jimin", "J-Hope", "Jungkook", "V"]},
-    {"soru": "BTS'in Line Friends ile işbirliği yaparak oluşturduğu karakter serisinin adı nedir?", "cevap": "BT21", "siklar": ["BTS-Toons", "BT21", "Bangtan Pets", "Line-BTS"]},
-    {"soru": "Jungkook'un BT21 karakterinin adı nedir?", "cevap": "Cooky", "siklar": ["Tata", "Chimmy", "Cooky", "Koya"]},
-    {"soru": "RM'in IQ seviyesinin kaç olduğu bilinmektedir?", "cevap": "148", "siklar": ["120", "135", "148", "160"]},
-    {"soru": "BTS'in Halsey ile düet yaptığı popüler şarkı hangisidir?", "cevap": "Boy With Luv", "siklar": ["Idol", "Boy With Luv", "On", "Stay Gold"]},
-    {"soru": "Suga'nın BT21 karakterinin adı nedir?", "cevap": "Shooky", "siklar": ["Shooky", "Mang", "RJ", "Van"]},
-    {"soru": "BTS'in hangi albümü onlara ilk kez bir Daesang (Yılın Albümü) ödülü kazandırmıştır?", "cevap": "The Most Beautiful Moment in Life: Young Forever", "siklar": ["Wings", "Dark & Wild", "The Most Beautiful Moment in Life: Young Forever", "Love Yourself: Tear"]},
-    {"soru": "Hangi şarkıda 'Geonbae (Şerefe)' kelimesi sıkça geçer ve parti havasındadır?", "cevap": "Dionysus", "siklar": ["Dionysus", "Fire", "Idol", "Dope"]},
-    {"soru": "BTS'in 2020 yılında çıkardığı 'Map of the Soul: 7' albümünün sert ve güçlü başlık şarkısı hangisidir?", "cevap": "ON", "siklar": ["Black Swan", "ON", "Louder Than Bombs", "Filter"]},
-    {"soru": "V'nin (Taehyung) oynadığı tarihi Kore dizisinin adı nedir?", "cevap": "Hwarang", "siklar": ["Hwarang", "Goblin", "The King", "Dream High"]},
-    {"soru": "Hangi üye solak olmasına rağmen sağ elini de çok aktif kullanabilir?", "cevap": "V", "siklar": ["RM", "Suga", "V", "Jimin"]},
-    {"soru": "Jimin'in solo şarkılarından biri hangisidir?", "cevap": "Lie", "siklar": ["Lie", "Awake", "Intro: Persona", "Epiphany"]},
-    {"soru": "BTS üyelerinden hangisi Daegu doğumludur?", "cevap": "Suga & V", "siklar": ["Suga & V", "RM & Jimin", "Jin & J-Hope", "Jungkook & Jin"]},
-    {"soru": "BTS'in hayır kurumu UNICEF ile birlikte yürüttüğü kampanyanın adı nedir?", "cevap": "Love Myself", "siklar": ["Save Me", "Love Myself", "End Violence", "Be Yourself"]},
-    {"soru": "J-Hope'un Becky G ile işbirliği yaptığı solo hit şarkısı hangisidir?", "cevap": "Chicken Noodle Soup", "siklar": ["More", "Arson", "Daydream", "Chicken Noodle Soup"]},
-    {"soru": "BTS'in Grammy Ödülleri'nde sahne alan ilk Koreli grup olduğu yıl hangisidir?", "cevap": "2020", "siklar": ["2018", "2019", "2020", "2021"]},
+    {"soru": "BTS'in en bÃ¼yÃ¼k Ã¼yesi (en yaÅŸlÄ±sÄ±) kimdir?", "cevap": "Jin", "siklar": ["Jin", "Suga", "RM", "J-Hope"]},
+    {"soru": "BTS'in en kÃ¼Ã§Ã¼k Ã¼yesi (maknae) kimdir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "RM"]},
+    {"soru": "BTS'in resmi fandom adÄ± nedir?", "cevap": "A.R.M.Y", "siklar": ["BLINK", "A.R.M.Y", "EXO-L", "STAY"]},
+    {"soru": "BTS hangi ÅŸirketetetin Ã§atÄ±sÄ± altÄ±nda kurulmuÅŸtur?", "cevap": "Big Hit (HYBE)", "siklar": ["SM", "YG", "JYP", "Big Hit (HYBE)"]},
+    {"soru": "BTS'in Ã§Ä±kÄ±ÅŸ ÅŸarkÄ±sÄ± hangisidir?", "cevap": "No More Dream", "siklar": ["No More Dream", "Boy In Luv", "Dope", "I Need U"]},
+    {"soru": "Hangi Ã¼yenin sahne adÄ± 'V' harfinden oluÅŸur?", "cevap": "Taehyung", "siklar": ["Jimin", "Taehyung", "Jungkook", "Suga"]},
+    {"soru": "BTS'in Billboard Hot 100 listesinde 1 numara olan ilk tamamen Ä°ngilizce ÅŸarkÄ±sÄ± hangisidir?", "cevap": "Dynamite", "siklar": ["Butter", "Dynamite", "Life Goes On", "Permission to Dance"]},
+    {"soru": "Min Yoongi hangi Ã¼yenin gerÃ§ek adÄ±dÄ±r?", "cevap": "Suga", "siklar": ["Suga", "J-Hope", "Jin", "RM"]},
+    {"soru": "Jung Hoseok'un sahne adÄ± nedir?", "cevap": "J-Hope", "siklar": ["RM", "Suga", "J-Hope", "V"]},
+    {"soru": "BTS'in resmi rengi veya sembolikleÅŸen rengi hangisidir?", "cevap": "Mor", "siklar": ["Pembe", "Mavi", "Mor", "Siyah"]},
+    {"soru": "'I purple you' (Sizi morluyorum) sÃ¶zÃ¼nÃ¼ hangi Ã¼ye literatÃ¼re kazandÄ±rmÄ±ÅŸtÄ±r?", "cevap": "V", "siklar": ["RM", "Jimin", "V", "Jungkook"]},
+    {"soru": "Suga'nÄ±n solo projelerinde kullandÄ±ÄŸÄ± diÄŸer sahne adÄ± nedir?", "cevap": "Agust D", "siklar": ["Agust D", "Gloss", "Min PD", "Lil Meow"]},
+    {"soru": "Hangi BTS Ã¼yesi modern dans geÃ§miÅŸine sahiptir ve Busan Sanat Lisesi'ne birincilikle girmiÅŸtir?", "cevap": "Jimin", "siklar": ["J-Hope", "Jimin", "V", "Jungkook"]},
+    {"soru": "BTS'in 'Love Yourself' albÃ¼m serisinin Ã¼nlÃ¼ baÅŸlÄ±k ÅŸarkÄ±sÄ± hangisidir?", "cevap": "Fake Love", "siklar": ["DNA", "Fake Love", "Idol", "Run"]},
+    {"soru": "Hangi Ã¼ye grubun 'Golden Maknae'si (AltÄ±n KÃ¼Ã§Ã¼k) olarak bilinir?", "cevap": "Jungkook", "siklar": ["Jimin", "V", "Jungkook", "Jin"]},
+    {"soru": "BTS'in hayranlarÄ± iÃ§in tasarladÄ±ÄŸÄ± resmi Ä±ÅŸÄ±klÄ± Ã§ubuÄŸun (lightstick) adÄ± nedir?", "cevap": "Army Bomb", "siklar": ["Muster Stick", "Army Bomb", "Bangtan Light", "Purple Rod"]},
+    {"soru": "BTS, BirleÅŸmiÅŸ Milletler (UN) genel kurulunda ilk kez hangi yÄ±l konuÅŸma yapmÄ±ÅŸtÄ±r?", "cevap": "2018", "siklar": ["2016", "2017", "2018", "2019"]},
+    {"soru": "BTS'in popÃ¼ler reality ÅŸov programÄ±nÄ±n adÄ± nedir?", "cevap": "Run BTS!", "siklar": ["BTS In The Soop", "Run BTS!", "Rookie King", "American Hustle Life"]},
+    {"soru": "Kim Seokjin'in lakaplarÄ±ndan biri hangisidir?", "cevap": "Worldwide Handsome", "siklar": ["Worldwide Handsome", "Golden Boy", "Gucci Boy", "Sunshine"]},
+    {"soru": "Grubun ana dansÃ§Ä±sÄ± ve koreografi lideri kimdir?", "cevap": "J-Hope", "siklar": ["Jimin", "J-Hope", "Jungkook", "V"]},
+    {"soru": "BTS'in Line Friends ile iÅŸbirliÄŸi yaparak oluÅŸturduÄŸu karakter serisinin adÄ± nedir?", "cevap": "BT21", "siklar": ["BTS-Toons", "BT21", "Bangtan Pets", "Line-BTS"]},
+    {"soru": "Jungkook'un BT21 karakterinin adÄ± nedir?", "cevap": "Cooky", "siklar": ["Tata", "Chimmy", "Cooky", "Koya"]},
+    {"soru": "RM'in IQ seviyesinin kaÃ§ olduÄŸu bilinmektedir?", "cevap": "148", "siklar": ["120", "135", "148", "160"]},
+    {"soru": "BTS'in Halsey ile dÃ¼et yaptÄ±ÄŸÄ± popÃ¼ler ÅŸarkÄ± hangisidir?", "cevap": "Boy With Luv", "siklar": ["Idol", "Boy With Luv", "On", "Stay Gold"]},
+    {"soru": "Suga'nÄ±n BT21 karakterinin adÄ± nedir?", "cevap": "Shooky", "siklar": ["Shooky", "Mang", "RJ", "Van"]},
+    {"soru": "BTS'in hangi albÃ¼mÃ¼ onlara ilk kez bir Daesang (YÄ±lÄ±n AlbÃ¼mÃ¼) Ã¶dÃ¼lÃ¼ kazandÄ±rmÄ±ÅŸtÄ±r?", "cevap": "The Most Beautiful Moment in Life: Young Forever", "siklar": ["Wings", "Dark & Wild", "The Most Beautiful Moment in Life: Young Forever", "Love Yourself: Tear"]},
+    {"soru": "Hangi ÅŸarkÄ±da 'Geonbae (Åerefe)' kelimesi sÄ±kÃ§a geÃ§er ve parti havasÄ±ndadÄ±r?", "cevap": "Dionysus", "siklar": ["Dionysus", "Fire", "Idol", "Dope"]},
+    {"soru": "BTS'in 2020 yÄ±lÄ±nda Ã§Ä±kardÄ±ÄŸÄ± 'Map of the Soul: 7' albÃ¼mÃ¼nÃ¼n sert ve gÃ¼Ã§lÃ¼ baÅŸlÄ±k ÅŸarkÄ±sÄ± hangisidir?", "cevap": "ON", "siklar": ["Black Swan", "ON", "Louder Than Bombs", "Filter"]},
+    {"soru": "V'nin (Taehyung) oynadÄ±ÄŸÄ± tarihi Kore dizisinin adÄ± nedir?", "cevap": "Hwarang", "siklar": ["Hwarang", "Goblin", "The King", "Dream High"]},
+    {"soru": "Hangi Ã¼ye solak olmasÄ±na raÄŸmen saÄŸ elini de Ã§ok aktif kullanabilir?", "cevap": "V", "siklar": ["RM", "Suga", "V", "Jimin"]},
+    {"soru": "Jimin'in solo ÅŸarkÄ±larÄ±ndan biri hangisidir?", "cevap": "Lie", "siklar": ["Lie", "Awake", "Intro: Persona", "Epiphany"]},
+    {"soru": "BTS Ã¼yelerinden hangisi Daegu doÄŸumludur?", "cevap": "Suga & V", "siklar": ["Suga & V", "RM & Jimin", "Jin & J-Hope", "Jungkook & Jin"]},
+    {"soru": "BTS'in hayÄ±r kurumu UNICEF ile birlikte yÃ¼rÃ¼ttÃ¼ÄŸÃ¼ kampanyanÄ±n adÄ± nedir?", "cevap": "Love Myself", "siklar": ["Save Me", "Love Myself", "End Violence", "Be Yourself"]},
+    {"soru": "J-Hope'un Becky G ile iÅŸbirliÄŸi yaptÄ±ÄŸÄ± solo hit ÅŸarkÄ±sÄ± hangisidir?", "cevap": "Chicken Noodle Soup", "siklar": ["More", "Arson", "Daydream", "Chicken Noodle Soup"]},
+    {"soru": "BTS'in Grammy Ã–dÃ¼lleri'nde sahne alan ilk Koreli grup olduÄŸu yÄ±l hangisidir?", "cevap": "2020", "siklar": ["2018", "2019", "2020", "2021"]},
     {"soru": "Jin'in BT21 karakteri olan beyaz alpakaya ne ad verilir?", "cevap": "RJ", "siklar": ["RJ", "Koya", "Tata", "Mang"]},
-    {"soru": "BTS'in 2016 yılında yayınlanan ve 'Kan, ter ve gözyaşlarımı al' sözleriyle bilinen ünlü şarkısı hangisidir?", "cevap": "Blood Sweat & Tears", "siklar": ["Wings", "Blood Sweat & Tears", "Save Me", "Fire"]},
-    {"soru": "Jungkook'un solo şarkısı 'Euphoria' hangi albüm projesinde yer alır?", "cevap": "Love Yourself: Answer", "siklar": ["Love Yourself: Tear", "Love Yourself: Her", "Love Yourself: Answer", "Wings"]},
-    {"soru": "RM'in BT21 karakteri olan uykucu koalanın adı nedir?", "cevap": "Koya", "siklar": ["Koya", "Shooky", "Mang", "Chimmy"]},
-    {"soru": "BTS'in 'Black Swan' şarkısının ilk koreografi videosunda hangi tarz dans ön plana çıkmıştır?", "cevap": "Modern Bale / Çağdaş Dans", "siklar": ["Hip-hop", "Breakdance", "Modern Bale / Çağdaş Dans", "Poping"]},
-    {"soru": "Suga'nın müzik yaparken ve piyano çalarken sıklıkla bahsettiği favori rengi nedir?", "cevap": "Kahverengi", "siklar": ["Siyah", "Beyaz", "Kahverengi", "Mavi"]},
-    {"soru": "BTS'in 'Yet To Come' konseri 2022 yılında Kore'nin hangi şehrinde gerçekleşmiştir?", "cevap": "Busan", "siklar": ["Seul", "Busan", "Incheon", "Daegu"]},
-    {"soru": "Hangi BTS klibi tren garı, lunapark ve kış temaları içerir, derin dostluğu anlatır?", "cevap": "Spring Day", "siklar": ["Spring Day", "Run", "I Need U", "Life Goes On"]},
-    {"soru": "J-Hope'un BT21 karakteri olan maskeli atın adı nedir?", "cevap": "Mang", "siklar": ["Mang", "Cooky", "Tata", "RJ"]},
-    {"soru": "BTS üyelerinin tamamının dostluk dövmesi olarak yaptırdığı sayı hangisidir?", "cevap": "7", "siklar": ["1", "7", "13", "0"]},
-    {"soru": "V'nin BT21 karakteri olan kalp kafalı uzaylının adı nedir?", "cevap": "Tata", "siklar": ["Tata", "Chimmy", "Koya", "RJ"]},
-    {"soru": "Jimin'in BT21 karakteri olan sarı kapüşonlu köpeğin adı nedir?", "cevap": "Chimmy", "siklar": ["Chimmy", "Cooky", "Shooky", "Van"]}
+    {"soru": "BTS'in 2016 yÄ±lÄ±nda yayÄ±nlanan ve 'Kan, ter ve gÃ¶zyaÅŸlarÄ±mÄ± al' sÃ¶zleriyle bilinen Ã¼nlÃ¼ ÅŸarkÄ±sÄ± hangisidir?", "cevap": "Blood Sweat & Tears", "siklar": ["Wings", "Blood Sweat & Tears", "Save Me", "Fire"]},
+    {"soru": "Jungkook'un solo ÅŸarkÄ±sÄ± 'Euphoria' hangi albÃ¼m projesinde yer alÄ±r?", "cevap": "Love Yourself: Answer", "siklar": ["Love Yourself: Tear", "Love Yourself: Her", "Love Yourself: Answer", "Wings"]},
+    {"soru": "RM'in BT21 karakteri olan uykucu koalanÄ±n adÄ± nedir?", "cevap": "Koya", "siklar": ["Koya", "Shooky", "Mang", "Chimmy"]},
+    {"soru": "BTS'in 'Black Swan' ÅŸarkÄ±sÄ±nÄ±n ilk koreografi videosunda hangi tarz dans Ã¶n plana Ã§Ä±kmÄ±ÅŸtÄ±r?", "cevap": "Modern Bale / Ã‡aÄŸdaÅŸ Dans", "siklar": ["Hip-hop", "Breakdance", "Modern Bale / Ã‡aÄŸdaÅŸ Dans", "Poping"]},
+    {"soru": "Suga'nÄ±n mÃ¼zik yaparken ve piyano Ã§alarken sÄ±klÄ±kla bahsettiÄŸi favori rengi nedir?", "cevap": "Kahverengi", "siklar": ["Siyah", "Beyaz", "Kahverengi", "Mavi"]},
+    {"soru": "BTS'in 'Yet To Come' konseri 2022 yÄ±lÄ±nda Kore'nin hangi ÅŸehrinde gerÃ§ekleÅŸmiÅŸtir?", "cevap": "Busan", "siklar": ["Seul", "Busan", "Incheon", "Daegu"]},
+    {"soru": "Hangi BTS klibi tren garÄ±, lunapark ve kÄ±ÅŸ temalarÄ± iÃ§erir, derin dostluÄŸu anlatÄ±r?", "cevap": "Spring Day", "siklar": ["Spring Day", "Run", "I Need U", "Life Goes On"]},
+    {"soru": "J-Hope'un BT21 karakteri olan maskeli atÄ±n adÄ± nedir?", "cevap": "Mang", "siklar": ["Mang", "Cooky", "Tata", "RJ"]},
+    {"soru": "BTS Ã¼yelerinin tamamÄ±nÄ±n dostluk dÃ¶vmesi olarak yaptÄ±rdÄ±ÄŸÄ± sayÄ± hangisidir?", "cevap": "7", "siklar": ["1", "7", "13", "0"]},
+    {"soru": "V'nin BT21 karakteri olan kalp kafalÄ± uzaylÄ±nÄ±n adÄ± nedir?", "cevap": "Tata", "siklar": ["Tata", "Chimmy", "Koya", "RJ"]},
+    {"soru": "Jimin'in BT21 karakteri olan sarÄ± kapÃ¼ÅŸonlu kÃ¶peÄŸin adÄ± nedir?", "cevap": "Chimmy", "siklar": ["Chimmy", "Cooky", "Shooky", "Van"]}
 ]
+BTS_MEMBERS = {
+    "RM": {
+        "isim": "Kim Namjoon",
+        "dogum": "12 EylÃ¼l 1994",
+        "gorev": "Lider, RapÃ§i",
+        "emoji": "ğŸ¨",
+        "renk": discord.Color.blue()
+    },
+    "Jin": {
+        "isim": "Kim Seokjin",
+        "dogum": "4 AralÄ±k 1992",
+        "gorev": "Vokalist",
+        "emoji": "ğŸ¦™",
+        "renk": discord.Color.red()
+    },
+    "Suga": {
+        "isim": "Min Yoongi",
+        "dogum": "9 Mart 1993",
+        "gorev": "RapÃ§i, ProdÃ¼ktÃ¶r",
+        "emoji": "ğŸ±",
+        "renk": discord.Color.dark_grey()
+    },
+    "J-Hope": {
+        "isim": "Jung Hoseok",
+        "dogum": "18 Åubat 1994",
+        "gorev": "DansÃ§Ä±, RapÃ§i",
+        "emoji": "ğŸ¿ï¸",
+        "renk": discord.Color.orange()
+    },
+    "Jimin": {
+        "isim": "Park Jimin",
+        "dogum": "13 Ekim 1995",
+        "gorev": "Ana DansÃ§Ä±, Vokalist",
+        "emoji": "ğŸ¥",
+        "renk": discord.Color.gold()
+    },
+    "V": {
+        "isim": "Kim Taehyung",
+        "dogum": "30 AralÄ±k 1995",
+        "gorev": "Vokalist",
+        "emoji": "ğŸ¯",
+        "renk": discord.Color.purple()
+    },
+    "Jungkook": {
+        "isim": "Jeon Jungkook",
+        "dogum": "1 EylÃ¼l 1997",
+        "gorev": "Ana Vokalist",
+        "emoji": "ğŸ°",
+        "renk": discord.Color.green()
+    }
+}
 
 def get_turkey_time():
     return datetime.datetime.now(pytz.timezone('Europe/Istanbul'))
 
-# --- BUTONLU OYUN GÖRÜNÜMÜ ---
+# --- BUTONLU OYUN GÃ–RÃœNÃœMÃœ ---
 class GameView(View):
     def __init__(self, dogru_cevap, siklar):
         super().__init__(timeout=15.0)
@@ -124,7 +175,7 @@ class GameView(View):
     def make_callback(self, sik):
         async def callback(interaction: discord.Interaction):
             if self.cevaplandi:
-                await interaction.response.send_message("❌ Bu soru zaten cevaplandı!", ephemeral=True)
+                await interaction.response.send_message("âŒ Bu soru zaten cevaplandÄ±!", ephemeral=True)
                 return
             
             if str(sik) == str(self.dogru_cevap):
@@ -132,75 +183,100 @@ class GameView(View):
                 self.stop()
                 u_id = interaction.user.id
                 bts_puan[u_id] = bts_puan.get(u_id, 100) + 50
-                await interaction.response.send_message(f"🎉 Doğru Cevap! {interaction.user.mention} 50 BTS Parası kazandı! Yeni bakiye: {bts_puan[u_id]}")
+                await interaction.response.send_message(f"ğŸ‰ DoÄŸru Cevap! {interaction.user.mention} 50 BTS ParasÄ± kazandÄ±! Yeni bakiye: {bts_puan[u_id]}")
                 await interaction.message.edit(view=None)
             else:
-                await interaction.response.send_message("❌ Yanlış şık! Tekrar dene.", ephemeral=True)
+                await interaction.response.send_message("âŒ YanlÄ±ÅŸ ÅŸÄ±k! Tekrar dene.", ephemeral=True)
         return callback
 
 # --- EVENTLER ---
 @bot.event
 async def on_ready():
-    print(f"Bot {bot.user.name} olarak giriş yaptı.")
-    await bot.change_presence(activity=discord.Game(name="!yardim | Koruma & Eğlence"))
+    print(f"Bot {bot.user.name} olarak giriÅŸ yaptÄ±.")
+    await bot.change_presence(activity=discord.Game(name="!yardim | Koruma & EÄŸlence"))
 
 @bot.event
 async def on_member_join(member):
     if server_settings["welcome_kanal"]:
         channel = bot.get_channel(server_settings["welcome_kanal"])
         if channel:
-            await channel.send(f"📥 Hoş geldin {member.mention}! Sunucumuza neşe getirdin.")
+            await channel.send(f"ğŸ“¥ HoÅŸ geldin {member.mention}! Sunucumuza neÅŸe getirdin.")
 
 @bot.event
 async def on_member_remove(member):
     if server_settings["welcome_kanal"]:
         channel = bot.get_channel(server_settings["welcome_kanal"])
         if channel:
-            await channel.send(f"📤 **{member.name}** sunucudan ayrıldı. Görüşmek üzere!")
+            await channel.send(f"ğŸ“¤ **{member.name}** sunucudan ayrÄ±ldÄ±. GÃ¶rÃ¼ÅŸmek Ã¼zere!")
 
+async def afk_kontrol(message):
+    if message.author.id in afk_users:
+        veri = afk_users.pop(message.author.id)
+
+        gecen = datetime.datetime.now() - veri["zaman"]
+        dakika, saniye = divmod(int(gecen.total_seconds()), 60)
+
+        await message.channel.send(
+            f"ğŸ‘‹ HoÅŸ geldin {message.author.mention}! "
+            f"**{dakika} dakika {saniye} saniye** AFK kaldÄ±n.",delete_after=8)
+
+    for uye in message.mentions:
+        if uye.id in afk_users:
+            veri = afk_users[uye.id]
+
+            gecen = datetime.datetime.now() - veri["zaman"]
+            dakika, saniye = divmod(int(gecen.total_seconds()), 60)
+
+            await message.channel.send(
+                f"ğŸ’¤ **{uye.display_name}** AFK.\n"
+                f"**Sebep:** {veri['sebep']}\n"
+                f"**SÃ¼re:** {dakika} dk {saniye} sn")
+            
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    # 1. Önce Komutları Çalıştır
+    # 1. Ã–nce KomutlarÄ± Ã‡alÄ±ÅŸtÄ±r
     if message.content.startswith(bot.command_prefix):
         await bot.process_commands(message)
         return
+        
+    await afk_kontrol(message)
 
-    # 2. AFK Etiket Kontrolü
+    # 2. AFK Etiket KontrolÃ¼
     for mention in message.mentions:
         if mention.id in afk_users:
             sebep = afk_users[mention.id]
-            await message.channel.send(f"⚠️ {message.author.mention}, etiketlediğin kullanıcı **{mention.name}** şu an AFK!\n**Sebep:** {sebep}")
+            await message.channel.send(f"âš ï¸ {message.author.mention}, etiketlediÄŸin kullanÄ±cÄ± **{mention.name}** ÅŸu an AFK!\n**Sebep:** {sebep}")
 
     msg_content = message.content.lower()
     log_kanal = bot.get_channel(server_settings["log_kanal"]) if server_settings["log_kanal"] else None
 
-    # SA-AS (Artık 100 farklı selam cümlesinden rastgele çeker!)
+    # SA-AS (ArtÄ±k 100 farklÄ± selam cÃ¼mlesinden rastgele Ã§eker!)
     if msg_content == "sa" or msg_content == "selam" or msg_content == "sa hq":
         rastgele_selam = random.choice(selam_cevaplari)
         await message.channel.send(f"{message.author.mention} {rastgele_selam}")
         return
 
-    # Küfür Koruması
+    # KÃ¼fÃ¼r KorumasÄ±
     if server_settings["kufurengel"]:
         for sansur in server_settings["karaliste"]:
             if sansur in msg_content:
                 try:
                     await message.delete()
                     if log_kanal:
-                        await log_kanal.send(f"🚫 **Küfür Engellendi:** {message.author.mention} -> {message.content}")
+                        await log_kanal.send(f"ğŸš« **KÃ¼fÃ¼r Engellendi:** {message.author.mention} -> {message.content}")
                 except:
                     pass
                 return
 
-    # Reklam Koruması
+    # Reklam KorumasÄ±
     if server_settings["reklamengel"] and ("http" in msg_content or "discord.gg/" in msg_content):
         try:
             await message.delete()
             if log_kanal:
-                await log_kanal.send(f"🔗 **Reklam Engellendi:** {message.author.mention} -> {message.content}")
+                await log_kanal.send(f"ğŸ”— **Reklam Engellendi:** {message.author.mention} -> {message.content}")
         except:
             pass
         return
@@ -213,7 +289,7 @@ async def on_message(message):
         if last_time and (now - last_time).total_seconds() < 0.8:
             try:
                 await message.delete()
-                await message.channel.send(f"⚠️ {message.author.mention}, lütfen çok hızlı mesaj gönderme!", delete_after=3)
+                await message.channel.send(f"âš ï¸ {message.author.mention}, lÃ¼tfen Ã§ok hÄ±zlÄ± mesaj gÃ¶nderme!", delete_after=3)
             except:
                 pass
             return
@@ -221,7 +297,7 @@ async def on_message(message):
     # Oransal Tetikleyiciler
     zar = random.random()
 
-    # 1. %3 İltifat (300 farklı iltifattan çeker!)
+    # 1. %3 Ä°ltifat (300 farklÄ± iltifattan Ã§eker!)
     if zar < 0.03:
         await message.channel.send(f"{message.author.mention} {random.choice(iltifatlar)}")
         return
@@ -233,12 +309,12 @@ async def on_message(message):
         random.shuffle(siklar)
         
         view = GameView(soru_data["cevap"], siklar)
-        msg = await message.channel.send(f"💜 **BTS TRIVIA SORUSU!**\n**{soru_data['soru']}**\n*Doğru şıkkı işaretle! (Süre: 15sn)*", view=view)
+        msg = await message.channel.send(f"ğŸ’œ **BTS TRIVIA SORUSU!**\n**{soru_data['soru']}**\n*DoÄŸru ÅŸÄ±kkÄ± iÅŸaretle! (SÃ¼re: 15sn)*", view=view)
         
         await asyncio.sleep(15)
         if not view.cevaplandi:
             try:
-                await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{soru_data['cevap']}** olacaktı.", view=None)
+                await msg.edit(content=f"â±ï¸ SÃ¼re doldu! DoÄŸru cevap **{soru_data['cevap']}** olacaktÄ±.", view=None)
             except:
                 pass
         return
@@ -293,284 +369,26 @@ async def on_message(message):
         gosterim_islem = "x" if islem == "*" else islem
         
         view = GameView(cevap, siklar_list)
-        msg = await message.channel.send(f"📊 **MATEMATİK SORUSU! ({seviye.replace('_', ' ').upper()})**\n**{num1} {gosterim_islem} {num2} = ?**\n*Cevaplamak için 15 saniyen var!*", view=view)
+        msg = await message.channel.send(f"ğŸ“Š **MATEMATÄ°K SORUSU! ({seviye.replace('_', ' ').upper()})**\n**{num1} {gosterim_islem} {num2} = ?**\n*Cevaplamak iÃ§in 15 saniyen var!*", view=view)
+        
         
         await asyncio.sleep(15)
         if not view.cevaplandi:
             try:
-                await msg.edit(content=f"⏱️ Süre doldu! Doğru cevap **{cevap}** olacaktı.", view=None)
+                await msg.edit(content=f"â±ï¸ SÃ¼re doldu! DoÄŸru cevap **{cevap}** olacaktÄ±.", view=None)
             except:
                 pass
         return
 
-# --- YETKİLİ KOMUTLARI ---
+# --- YETKÄ°LÄ° KOMUTLARI ---
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def ayarlar(ctx):
-    embed = discord.Embed(title="⚙️ Sunucu Ayarları", color=discord.Color.blue())
-    embed.add_field(name="Küfür Filtresi", value="✅ Aktif" if server_settings["kufurengel"] else "❌ Pasif")
-    embed.add_field(name="Reklam Filtresi", value="✅ Aktif" if server_settings["reklamengel"] else "❌ Pasif")
-    embed.add_field(name="Spam Filtresi", value="✅ Aktif" if server_settings["spamengel"] else "❌ Pasif")
-    embed.add_field(name="Log Kanalı", value=f"<#{server_settings['log_kanal']}>" if server_settings["log_kanal"] else "❌ Ayarlanmamış")
-    embed.add_field(name="Giriş-Çıkış Kanalı", value=f"<#{server_settings['welcome_kanal']}>" if server_settings["welcome_kanal"] else "❌ Ayarlanmamış")
+    embed = discord.Embed(title="âš™ï¸ Sunucu AyarlarÄ±", color=discord.Color.blue())
+    embed.add_field(name="KÃ¼fÃ¼r Filtresi", value="âœ… Aktif" if server_settings["kufurengel"] else "âŒ Pasif")
+    embed.add_field(name="Reklam Filtresi", value="âœ… Aktif" if server_settings["reklamengel"] else "âŒ Pasif")
+    embed.add_field(name="Spam Filtresi", value="âœ… Aktif" if server_settings["spamengel"] else "âŒ Pasif")
+    embed.add_field(name="Log KanalÄ±", value=f"<#{server_settings['log_kanal']}>" if server_settings["log_kanal"] else "âŒ AyarlanmamÄ±ÅŸ")
+    embed.add_field(name="GiriÅŸ-Ã‡Ä±kÄ±ÅŸ KanalÄ±", value=f"<#{server_settings['welcome_kanal']}>" if server_settings["welcome_kanal"] else "âŒ AyarlanmamÄ±ÅŸ")
     await ctx.send(embed=embed)
 
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def kufurengel(ctx):
-    server_settings["kufurengel"] = not server_settings["kufurengel"]
-    durum = 'AÇIK' if server_settings['kufurengel'] else 'KAPALI'
-    await ctx.send(f"🛡️ Küfür filtresi: **{durum}**")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def reklamengel(ctx):
-    server_settings["reklamengel"] = not server_settings["reklamengel"]
-    durum = 'AÇIK' if server_settings['reklamengel'] else 'KAPALI'
-    await ctx.send(f"🛡️ Reklam filtresi: **{durum}**")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def spamengel(ctx):
-    server_settings["spamengel"] = not server_settings["spamengel"]
-    durum = 'AÇIK' if server_settings['spamengel'] else 'KAPALI'
-    await ctx.send(f"🛡️ Spam filtresi: **{durum}**")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def logayarla(ctx, channel: discord.TextChannel):
-    server_settings["log_kanal"] = channel.id
-    await ctx.send(f"✅ Log kanalı başarıyla {channel.mention} olarak ayarlandı!")
-
-@bot.command(name="hosgeldin-ve-baybay-ayarla")
-@commands.has_permissions(administrator=True)
-async def welcomeayarla(ctx, channel: discord.TextChannel):
-    server_settings["welcome_kanal"] = channel.id
-    await ctx.send(f"✅ Giriş-Çıkış mesaj kanalı {channel.mention} olarak ayarlandı!")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def karaliste(ctx, islem=None, *, kelime=None):
-    if not islem:
-        await ctx.send(f"📝 **Yasaklı Kelimeler:** {', '.join(server_settings['karaliste'])}")
-    elif islem == "ekle" and kelime:
-        if kelime.lower() not in server_settings["karaliste"]:
-            server_settings["karaliste"].append(kelime.lower())
-            await ctx.send(f"✅ **{kelime}** yasaklı kelime listesine eklendi.")
-    elif islem == "cikar" and kelime:
-        if kelime.lower() in server_settings["karaliste"]:
-            server_settings["karaliste"].remove(kelime.lower())
-            await ctx.send(f"✅ **{kelime}** yasaklı kelime listesinden çıkarıldı.")
-
-@bot.command()
-@commands.has_permissions(manage_messages=True)
-async def sil(ctx, sayi: int):
-    await ctx.channel.purge(limit=sayi + 1)
-    await ctx.send(f"🗑️ **{sayi}** adet mesaj temizlendi.", delete_after=4)
-
-@bot.command()
-@commands.has_permissions(moderate_members=True)
-async def sustur(ctx, member: discord.Member, sure: str, *, sebep="Belirtilmedi"):
-    time_dict = {"m": 1, "h": 60, "d": 1440}
-    unit = sure[-1]
-    if unit not in time_dict or not sure[:-1].isdigit():
-        await ctx.send("❌ Geçersiz süre formatı! Örn: 5m, 2h, 1d")
-        return
-    minutes = int(sure[:-1]) * time_dict[unit]
-    duration = datetime.timedelta(minutes=minutes)
-    await member.timeout(duration, reason=sebep)
-    await ctx.send(f"🤐 {member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
-
-@bot.command()
-@commands.has_permissions(moderate_members=True)
-async def ac(ctx, member: discord.Member):
-    await member.timeout(None)
-    await ctx.send(f"🔊 {member.mention} kullanıcısının susturulması kaldırıldı.")
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def nuke(ctx):
-    pos = ctx.channel.position
-    new_ch = await ctx.channel.clone(reason="Nuke İşlemi")
-    await ctx.channel.delete()
-    await new_ch.edit(position=pos)
-    await new_ch.send("💥 Kanal başarıyla sıfırlandı (Nuke)!\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464835")
-
-@bot.command()
-@commands.has_permissions(manage_roles=True)
-async def rolver(ctx, member: discord.Member, role: discord.Role):
-    await member.add_roles(role)
-    await ctx.send(f"✅ {member.mention} isimli üyeye **{role.name}** rolü verildi.")
-
-@bot.command()
-@commands.has_permissions(manage_roles=True)
-async def rolal(ctx, member: discord.Member, role: discord.Role):
-    await member.remove_roles(role)
-    await ctx.send(f"✅ {member.mention} isimli üyeden **{role.name}** rolü geri alındı.")
-
-@bot.command()
-@commands.has_permissions(ban_members=True)
-async def ban(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
-    await member.ban(reason=sebep)
-    await ctx.send(f"🔨 **{member.name}** sunucudan banlandı. Sebep: {sebep}")
-
-@bot.command()
-@commands.has_permissions(kick_members=True)
-async def kick(ctx, member: discord.Member, *, sebep="Belirtilmedi"):
-    await member.kick(reason=sebep)
-    await ctx.send(f"👢 **{member.name}** sunucudan atıldı. Sebep: {sebep}")
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def lock(ctx):
-    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
-    await ctx.send("🔒 Kanal yazışmaya kapatıldı!")
-
-@bot.command()
-@commands.has_permissions(manage_channels=True)
-async def unlock(ctx):
-    await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
-    await ctx.send("🔓 Kanal tekrar yazışmaya açıldı.")
-
-# --- İKİ AŞAMALI AFK SİSTEMİ ---
-@bot.command()
-async def afk(ctx, *, sebep=None):
-    if ctx.author.id in afk_users:
-        del afk_users[ctx.author.id]
-        await ctx.send(f"👋 Hoş geldin {ctx.author.mention}! Tekrar aktifsin tatlış, AFK modun kapatıldı.", delete_after=5)
-        return
-
-    if sebep is None:
-        afk_users[ctx.author.id] = "Belirtilmedi"
-        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin! Kapatmak için tekrar `!afk` yazman yeterli.")
-    else:
-        afk_users[ctx.author.id] = sebep
-        await ctx.send(f"💤 {ctx.author.mention}, başarıyla AFK moduna geçtin!\n**Sebep:** {sebep}\n*Kapatmak için tekrar `!afk` yazman yeterli.*")
-
-# --- EĞLENCE KOMUTLARI ---
-@bot.command()
-async def uçangüvercin(ctx, member: discord.Member):
-    await ctx.send(f"🕊️ {ctx.author.mention}, {member.mention} kullanıcısına uçarak gelen çatık kaşlı bir güvercin fırlattı!\n**Tekme atıyor bu güvercin sana!**\nhttps://tenor.com/view/pigeon-kick-funny-birds-gif-14470635")
-
-@bot.command()
-async def saat(ctx):
-    tr_time = get_turkey_time().strftime('%d/%m/%Y %H:%M:%S')
-    await ctx.send(f"⏰ **Güncel Türkiye Saati ve Tarihi:** {tr_time}")
-
-@bot.command()
-async def slaps(ctx, member: discord.Member):
-    await ctx.send(f"🖐️ {ctx.author.mention}, {member.mention} kullanıcısını Osmanlı tokadıyla uçurdu!\nhttps://tenor.com/view/slap-in-the-face-angry-gif-14689404")
-
-@bot.command()
-async def kiss(ctx, member: discord.Member):
-    await ctx.send(f"💋 {ctx.author.mention}, {member.mention} kullanıcısını sulu sulu öptü!\nhttps://tenor.com/view/anime-kiss-gif-25745155")
-
-@bot.command()
-async def sarıl(ctx, member: discord.Member):
-    await ctx.send(f"🤗 {ctx.author.mention}, {member.mention} kullanıcısına sımsıkı sarıldı!\nhttps://tenor.com/view/hug-anime-love-gif-25644292")
-
-@bot.command()
-async def askolcer(ctx, member: discord.Member):
-    oran = random.randint(0, 100)
-    await ctx.send(f"❤️ {ctx.author.mention} ile {member.mention} arasındaki aşk oranı: **%{oran}**")
-
-@bot.command()
-async def efkarolcer(ctx):
-    oran = random.randint(0, 100)
-    await ctx.send(f"🚬 {ctx.author.mention} bugünkü efkar durumun: **%{oran}**")
-
-@bot.command()
-async def sanslisayi(ctx):
-    sayi = random.randint(1, 100)
-    await ctx.send(f"🎲 {ctx.author.mention}, bugün senin şanslı sayın: **{sayi}**")
-
-@bot.command()
-async def ship(ctx):
-    members = [m for m in ctx.guild.members if not m.bot]
-    if len(members) < 2:
-        return
-    m1 = ctx.author
-    m2 = random.choice(members)
-    while m2.id == m1.id:
-        m2 = random.choice(members)
-    oran = random.randint(0, 100)
-    await ctx.send(f"💕 **Günün Shipi:** {m1.mention} X {m2.mention} | Kalp Oranı: **%{oran}**")
-
-@bot.command()
-async def ship2(ctx, member: discord.Member):
-    await ctx.send(f"💖 {ctx.author.mention} X {member.mention}\n**Aşk Oranı: %99999! Bu aşk ölçülemez!**")
-
-# --- EKONOMİ & OYUN ---
-@bot.command()
-async def para(ctx, member: discord.Member = None):
-    target = member or ctx.author
-    bakiye = bts_puan.get(target.id, 100)
-    bts_puan[target.id] = bakiye
-    await ctx.send(f"💰 {target.mention}: **{bakiye} BTS Parası**")
-
-@bot.command()
-async def slots(ctx, miktar: int):
-    bakiye = bts_puan.get(ctx.author.id, 100)
-    if miktar <= 0 or miktar > bakiye:
-        await ctx.send("❌ Geçersiz miktar veya yetersiz bakiye!")
-        return
-    
-    slots_icons = ["🍒", "🍋", "🍇", "🍊", "💎"]
-    r1, r2, r3 = random.choice(slots_icons), random.choice(slots_icons), random.choice(slots_icons)
-    msg = f"🎰 **{ctx.author.name}** slots çeviriyor...\n| {r1} | {r2} | {r3} |\n"
-    
-    if r1 == r2 == r3:
-        odul = miktar * 4
-        bts_puan[ctx.author.id] = bakiye + odul
-        await ctx.send(msg + f"🔥 **MÜKEMMEL! 3'te 3 Yaptın!** {odul} BTS Parası kazandın!")
-    elif r1 == r2 or r2 == r3 or r1 == r3:
-        odul = miktar * 2
-        bts_puan[ctx.author.id] = bakiye + odul
-        await ctx.send(msg + f"✨ **Güzel! Çift yakaladın.** {odul} BTS Parası kazandın!")
-    else:
-        bts_puan[ctx.author.id] = bakiye - miktar
-        await ctx.send(msg + f"💥 **Kaybettin!** {miktar} BTS Parası cüzdanından uçtu.")
-
-# --- BİLGİ & SİSTEM ---
-@bot.command()
-async def spty(ctx, member: discord.Member = None):
-    target = member or ctx.author
-    spotify_act = None
-    for act in target.activities:
-        if isinstance(act, discord.Spotify):
-            spotify_act = act
-            break
-            
-    if spotify_act:
-        embed = discord.Embed(title=f"🎵 {target.name} Spotify Dinliyor", color=discord.Color.green())
-        embed.add_field(name="Şarkı", value=spotify_act.title, inline=False)
-        embed.add_field(name="Sanatçı", value=", ".join(spotify_act.artists), inline=False)
-        embed.add_field(name="Albüm", value=spotify_act.album, inline=False)
-        embed.set_thumbnail(url=spotify_act.album_cover_url)
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send(f"❌ {target.mention} şu an Spotify'da bir şey dinlemiyor veya durumu kapalı.")
-
-@bot.command()
-async def kullanici(ctx, member: discord.Member = None):
-    target = member or ctx.author
-    embed = discord.Embed(title=f"👤 Kullanıcı Bilgisi: {target.name}", color=discord.Color.blue())
-    embed.add_field(name="Hesap Açılış Tarihi", value=target.created_at.strftime('%d/%m/%Y'), inline=True)
-    embed.add_field(name="Sunucuya Katılım", value=target.joined_at.strftime('%d/%m/%Y') if target.joined_at else "Bilinmiyor", inline=True)
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def sunucu(ctx):
-    await ctx.send(f"🏰 **{ctx.guild.name}** Sunucu Üye Sayısı: **{ctx.guild.member_count}**")
-
-@bot.command()
-async def yardim(ctx):
-    embed = discord.Embed(title="📜 Ultra Gelişmiş Komut Menüsü", color=discord.Color.gold())
-    embed.add_field(name="🛡️ Yetkili & Yönetim", value="ayarlar, kufurengel, reklamengel, spamengel, logayarla, hosgeldin-ve-baybay-ayarla, karaliste, sil, sustur, ac, nuke, rolver, rolal, ban, kick, lock, unlock", inline=False)
-    embed.add_field(name="🎉 Eğlence & Etkileşim", value="afk, uçangüvercin, saat, slaps, kiss, sarıl, askolcer, efkarolcer, sanslisayi, ship, ship2", inline=False)
-    embed.add_field(name="💰 Ekonomi & Sistem", value="para, slots, spty, kullanici, sunucu", inline=False)
-    await ctx.send(embed=embed)
-
-# --- BOTU BAŞLATMA ---
-keep_alive()
-bot.run(os.environ.get('DISCORD_BOT_TOKEN'))
