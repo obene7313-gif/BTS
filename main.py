@@ -378,7 +378,7 @@ async def sustur(ctx, member: discord.Member, sure: str, *, sebep="Belirtilmedi"
     minutes = int(sure[:-1]) * time_dict[unit]
     duration = datetime.timedelta(minutes=minutes)
     await member.timeout(duration, reason=sebep)
-    await ctx.send(f"🤐  member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
+    await ctx.send(f"🤐  {member.mention} **{sure}** boyunca susturuldu. Sebep: {sebep}")
 
 @bot.command()
 @commands.has_permissions(moderate_members=True)
