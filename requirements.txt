@@ -1,4 +1,4 @@
-discord.py==2.3.2
-Flask==3.0.0
-pytz==2023.3.post1
-aiohttp==3.8.5
+discord.py
+flask
+yt-dlp
+PyNaCl
