@@ -390,8 +390,16 @@ async def on_message(message):
             else:
                 num1 = random.randint(1, 15)
                 num2 = random.randint(1, 15)
-                
-            cevap = num1 + num2 if islem == "+" else (num1 - num2 if islem == "-" else num1 *
+
+if islem == "+":
+    cevap = num1 + num2
+elif islem == "-":
+    cevap = num1 - num2
+elif islem == "*":
+    cevap = num1 * num2
+else:
+    cevap = 0
+    
 # --- İKİ AŞAMALI AFK SİSTEMİ ---
 @bot.command()
 async def afk(ctx, *, sebep=None):
