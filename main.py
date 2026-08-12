@@ -3,8 +3,7 @@ from discord.ext import commands
 from discord.ui import Button, View
 import random
 import asyncio
-import datetime
-import pytz
+import datetime 
 from flask import Flask
 from threading import Thread
 import os
@@ -46,7 +45,7 @@ server_settings = {
     "spamengel": False,
     "log_kanal": None,
     "welcome_kanal": None,
-    "karaliste": ["pic", "orospu", "sik", "amk"]
+    "karaliste": ["pic", "orospu", "sik", "yarrak", "sg", "Allah", "ALLAHINI", "allahını", "peygamber", "anani", "kuranini", "aq", "amk"]
 }
 
 bts_puan = {}
