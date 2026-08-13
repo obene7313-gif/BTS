@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 from datetime import datetime
+import time
 import pytz
 
 # iltifatlar.py dosyasından veri çekimi
@@ -28,6 +29,7 @@ def load_data():
     return {
         "bakiye": {}, 
         "afk": {}, 
+        "haftalik": {},
         "ayarlar": {"kufur": False, "reklam": False, "log": None, "hghb": None, "spam_saniye": 0}, 
         "karaliste": []
     }
@@ -414,11 +416,44 @@ async def saat(ctx):
 
 # ==================== EKONOMİ KOMUTLARI ====================
 
+@bot.command(name="haftalık", aliases=["haftalik"])
+async def haftalik_odul(ctx):
+    uid = str(ctx.author.id)
+    su_an = time.time()
+    
+    if "haftalik" not in db:
+        db["haftalik"] = {}
+
+    son_claim = db["haftalik"].get(uid, 0)
+    bekleme_suresi = 7 * 24 * 60 * 60  # 7 gün (saniye)
+
+    if su_an - son_claim < bekleme_suresi:
+        kalan_saniye = int(bekleme_suresi - (su_an - son_claim))
+        gun = kalan_saniye // (24 * 3600)
+        saat = (kalan_saniye % (24 * 3600)) // 3600
+        dakika = (kalan_saniye % 3600) // 60
+
+        await ctx.send(
+            f"⚠️ **{ctx.author.display_name}**, bu haftalık ödülünü zaten aldın!\n"
+            f"Tekrar almak için **{gun} gün, {saat} saat, {dakika} dakika** beklemelisin. ⏳"
+        )
+        return
+
+    # Bakiyeyi ve zamanı güncelle
+    db["bakiye"][uid] = db["bakiye"].get(uid, 0) + 10000
+    db["haftalik"][uid] = su_an
+    save_data(db)
+
+    await ctx.send(
+        f"🎉 **Tebrikler {ctx.author.display_name}!** Haftalık **10.000 BTS Parası** ödülünü aldın! 🪙✨\n"
+        f"💰 **Toplam Bakiyen:** `{db['bakiye'][uid]:,} BTS Parası`"
+    )
+
 @bot.command()
 async def para(ctx):
     uid = str(ctx.author.id)
     bakiye = db["bakiye"].get(uid, 0)
-    await ctx.send(f"💰 **{ctx.author.display_name}**, hesabında **{bakiye} BTS Parası** var! 💜✨")
+    await ctx.send(f"💰 **{ctx.author.display_name}**, hesabında **{bakiye:,} BTS Parası** var! 💜✨")
 
 @bot.command()
 async def yazitura(ctx, miktar: int, secim: str):
@@ -445,7 +480,7 @@ async def slots(ctx, miktar: int):
         await ctx.send("❌ Yetersiz bakiye! 💔")
         return
 
-    emojiler = ["🎰", "🍇", "🍒", "🍋", "💎"]
+emojiler = ["🎰", "🍇", "🍒", "🍋", "💎"]
     s1, s2, s3 = random.choice(emojiler), random.choice(emojiler), random.choice(emojiler)
     
     if s1 == s2 == s3:
@@ -480,7 +515,7 @@ async def rich(ctx):
     for idx, (user_id, coin) in enumerate(sirali, 1):
         try:
             usr = await bot.fetch_user(int(user_id))
-            embed.add_field(name=f"#{idx} {usr.display_name}", value=f"💰 `{coin}` BTS Parası", inline=False)
+            embed.add_field(name=f"#{idx} {usr.display_name}", value=f"💰 `{coin:,}` BTS Parası", inline=False)
         except:
             pass
     await ctx.send(embed=embed)
@@ -536,7 +571,6 @@ async def sunucu(ctx):
 
 @bot.command()
 async def kullanici(ctx, kullanici: discord.Member = None):
-    # İkili Mantık: Etiket atılırsa o üyenin, atılmazsa komutu kullanan üyenin zamanını söyler
     hedef = kullanici if kullanici else ctx.author
     katilma = hedef.joined_at.strftime("%d/%m/%Y")
     
@@ -558,7 +592,7 @@ async def yardim(ctx):
     embed = discord.Embed(title="🌸 Amortentia Bot Komut Menüsü 🎀", description="Tüm kullanılabilir komut listesi aşağıdadır ✨", color=discord.Color.pink())
     embed.add_field(name="👑 Yetkili Komutları", value="`!ayarlar`, `!kufurengel`, `!reklamengel`, `!spamengel`, `!logayar`, `!hghb`, `!karaliste`, `!sil`, `!sustur`, `!ac`, `!kick`, `!ban`, `!unban`, `!nuke`, `!lock`, `!unlock`, `!rolver`, `!rolal`, `!amortentia`", inline=False)
     embed.add_field(name="💖 Eğlence Komutları", value="`!afk`, `!ucanguvercin`, `!kiss`, `!op`, `!saril`, `!slaps`, `!efkarolcer`, `!askolcer`, `!sanslisayi`, `!ship`, `!ship2`, `!eatt`, `!eat`, `!saat`", inline=False)
-    embed.add_field(name="💰 Ekonomi Komutları", value="`!para`, `!yazitura`, `!slots`, `!join`, `!rich`", inline=False)
+    embed.add_field(name="💰 Ekonomi Komutları", value="`!haftalık`, `!para`, `!yazitura`, `!slots`, `!join`, `!rich`", inline=False)
     embed.add_field(name="🎶 Bilgi & Müzik Komutları", value="`!sarki`, `!spty`, `!bts`, `!sunucu`, `!kullanici`, `!ping`", inline=False)
     await ctx.send(embed=embed)
 
