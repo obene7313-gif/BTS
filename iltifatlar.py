@@ -436,4 +436,211 @@ selam_cevaplari = [
     "Selam harika bir ruha sahip olan özel insan! Hoş geldin! 🏆💖",
     "Hoş geldin gökyüzünün en parıltılı, en asil yıldızı! Selamlar! ⭐👑"
 ]
+
+
+# --- BTS QUIZ SORULARI (100 ADET) ---
+bts_sorulari = [
+    {"soru": "BTS hangi yılda resmi olarak çıkış yapmıştır?", "siklar": ["2011", "2013", "2015", "2017"], "dogru": 1},
+    {"soru": "BTS'in lideri kimdir?", "siklar": ["Jin", "Suga", "RM", "Jungkook"], "dogru": 2},
+    {"soru": "BTS hayran grubuna verilen isim nedir?", "siklar": ["BLINK", "ARMY", "ONCE", "STAY"], "dogru": 1},
+    {"soru": "BTS'in en küçük üyesi (Maknae) kimdir?", "siklar": ["Jungkook", "V", "Jimin", "J-Hope"], "dogru": 0},
+    {"soru": "'Golden Maknae' lakabıyla bilinen üye kimdir?", "siklar": ["Jimin", "V", "Jungkook", "Jin"], "dogru": 2},
+    {"soru": "BTS hangi şirket altında çıkış yapmıştır?", "siklar": ["SM Entertainment", "JYP Entertainment", "Big Hit Entertainment", "YG Entertainment"], "dogru": 2},
+    {"soru": "BTS'in çıkış şarkısı hangisidir?", "siklar": ["No More Dream", "Boy In Luv", "DNA", "Dynamite"], "dogru": 0},
+    {"soru": "Suga'nın solo projelerinde kullandığı sahne adı nedir?", "siklar": ["August D", "Agust D", "Agust V", " Agust S"], "dogru": 1},
+    {"soru": "J-Hope'un gerçek adı nedir?", "siklar": ["Jung Ho-seok", "Kim Seok-jin", "Min Yoon-gi", "Kim Tae-hyung"], "dogru": 0},
+    {"soru": "BTS'in ilk Billboard Hot 100 1 numarası olan şarkısı hangisidir?", "siklar": ["Fake Love", "Boy With Luv", "Dynamite", "Butter"], "dogru": 2},
+    {"soru": "Jin'in gruptaki konumu nedir?", "siklar": ["Ana Rapçi", "Visual & Vokal", "Ana Dansçı", "Lider"], "dogru": 1},
+    {"soru": "Jimin'in doğum tarihi hangi aydadır?", "siklar": ["Ekim", "Aralık", "Şubat", "Haziran"], "dogru": 0},
+    {"soru": "V (Taehyung) 'Hwarang' dizisinde hangi karakteri canlandırmıştır?", "siklar": ["Hansung", "Ban Ryu", "Su Ho", "A-Ro"], "dogru": 0},
+    {"soru": "BTS'in UNICEF ile yürüttüğü küresel kampanyanın adı nedir?", "siklar": ["Love Yourself", "ENDviolence", "Youth First", "Speak Yourself"], "dogru": 1},
+    {"soru": "RM'in açılımı nedir?", "siklar": ["Real Me", "Rap Monster", "Royal Music", "Rap Master"], "dogru": 1},
+    {"soru": "Jungkook'un çizgi karakter adıyla bilinen BT21 karakteri hangisidir?", "siklar": ["TATA", "CHIMMY", "COOKY", "KOYA"], "dogru": 2},
+    {"soru": "BTS'in 'WINGS' albümündeki çıkış parçası hangisidir?", "siklar": ["Blood Sweat & Tears", "FIRE", "Spring Day", "Not Today"], "dogru": 0},
+    {"soru": "Suga'nın en çok sevdiği ve çalabildiği enstrüman hangisidir?", "siklar": ["Gitar", "Piyano", "Keman", "Bateri"], "dogru": 1},
+    {"soru": "BT21 karakterlerinden 'TATA'yı hangi üye tasarlamıştır?", "siklar": ["V", "Jungkook", "Jimin", "Jin"], "dogru": 0},
+    {"soru": "BTS albümlerindeki 'HYYH' serisinin açılımı nedir?", "siklar": ["Hwayangyeonhwa", "Happy Young Years Ahead", "Have Your Young Hope", "Heart Young Years High"], "dogru": 0},
+    {"soru": "J-Hope'un ilk solo mixtape'inin adı nedir?", "siklar": ["Hope World", "Jack In The Box", "Daydream", "Chicken Noodle Soup"], "dogru": 0},
+    {"soru": "BTS üyelerinden hangisi Daegu doğumludur?", "siklar": ["Suga & V", "Jimin & Jungkook", "RM & J-Hope", "Jin & RM"], "dogru": 0},
+    {"soru": "Jin'in tasarladığı BT21 karakterinin adı nedir?", "siklar": ["RJ", "SHOOKY", "MANG", "TATA"], "dogru": 0},
+    {"soru": "BTS'in Grammy Ödülleri'nde performans sergileyen ilk Koreli grup olduğu şarkı hangisidir?", "siklar": ["Old Town Road (Remix)", "Dynamite", "Butter", "Boy With Luv"], "dogru": 0},
+    {"soru": "Jimin hangi lisede modern dans alanında okul birincisiydi?", "siklar": ["Busan High School of Arts", "Seoul Arts High School", "Hanlim Multi Art School", "SOPA"], "dogru": 0},
+    {"soru": "BTS'in 2020 yılında yayınlanan albümünün adı nedir?", "siklar": ["Map of the Soul: 7", "BE", "Proof", "HER"], "dogru": 0},
+    {"soru": "RM'in IQ seviyesi kaçtır?", "siklar": ["138", "148", "156", "160"], "dogru": 1},
+    {"soru": "Jungkook'un köpeğinin adı nedir?", "siklar": ["Yeontan", "Bam", "Holly", "Mickey"], "dogru": 1},
+    {"soru": "V'nin köpeğinin adı nedir?", "siklar": ["Yeontan", "Gureum", "Gatnam", "Soonshim"], "dogru": 0},
+    {"soru": "BTS'in İngilizce sözlü ilk şarkısı hangisidir?", "siklar": ["Dynamite", "Butter", "Permission to Dance", "Waste It On Me"], "dogru": 3},
+    {"soru": "J-Hope'un dance crew grubunun adı neydi?", "siklar": ["Neuron", "Urban Dance", "Street Boyz", "Dance King"], "dogru": 0},
+    {"soru": "Suga'nın prodüktörlüğünü yaptığı 'Wine' şarkısını kim seslendirmiştir?", "siklar": ["Suran", "IU", "Heize", "Lee Hi"], "dogru": 0},
+    {"soru": "BTS'in temsil ettiği resmi renk hangisidir?", "siklar": ["Mor (Purple)", "Mavi", "Siyah", "Kırmızı"], "dogru": 0},
+    {"soru": "I Purple You (Borahae) terimini kim bulmuştur?", "siklar": ["V", "RM", "Jungkook", "Jimin"], "dogru": 0},
+    {"soru": "BTS'in fandom adı 'ARMY' ne anlama gelmektedir?", "siklar": ["Adorable Representative M.C. for Youth", "Active Rare Youth Music Team", "Always Ready Music Youth", "Army Of Royal Musical Youth"], "dogru": 0},
+    {"soru": "Jin grubun en büyüğüdür. Doğum yılı kaçtır?", "siklar": ["1992", "1993", "1994", "1995"], "dogru": 0},
+    {"soru": "BTS'in reality şov programının adı nedir?", "siklar": ["Run BTS!", "BTS In the SOOP", "American Hustle Life", "Hepsı"], "dogru": 3},
+    {"soru": "Jungkook'un sol kolundaki dövmelerden biri hangisidir?", "siklar": ["ARMY yazısı", "Kaplan", "Gitar", "Gül"], "dogru": 0},
+    {"soru": "RM'in solo albümü 'Indigo' hangi yılda çıkmıştır?", "siklar": ["2022", "2021", "2020", "2023"], "dogru": 0},
+    {"soru": "BTS'in 'Spring Day' şarkısı hangi trajediyi simgelemektedir?", "siklar": ["Sewol Feribotu Faciası", "Itaewon Faciası", "Kobe Depremi", "Daegu Yangını"], "dogru": 0},
+    {"soru": "Jimin'in solo şarkısı 'Lie' hangi albümde yer alır?", "siklar": ["WINGS", "LOVE YOURSELF: Tear", "MAP OF THE SOUL: PERSONA", "BE"], "dogru": 0},
+    {"soru": "Suga'nın Basketbol pozisyonu nedir?", "siklar": ["Point Guard (Kurucu)", "Center", "Power Forward", "Small Forward"], "dogru": 0},
+    {"soru": "BTS'in Birleşmiş Milletler'deki (UN) ilk konuşmasını kim yapmıştır?", "siklar": ["RM", "Jin", "Jungkook", "Tüm üyeler"], "dogru": 0},
+    {"soru": "BTS ne zaman 10. yıl dönümünü kutlamıştır?", "siklar": ["2023", "2022", "2024", "2021"], "dogru": 0},
+    {"soru": "J-Hope'un 'Chicken Noodle Soup' şarkısında düet yaptığı isim kimdir?", "siklar": ["Becky G", "Nicki Minaj", "Halsey", "Sia"], "dogru": 0},
+    {"soru": "Boy With Luv şarkısında BTS'e eşlik eden Amerikalı sanatçı kimdir?", "siklar": ["Halsey", "Nicki Minaj", "Sia", "Charli XCX"], "dogru": 0},
+    {"soru": "Jungkook'un 'Seven' şarkısında eşlik eden rapçi kimdir?", "siklar": ["Latto", "Ice Spice", "Cardi B", "Doja Cat"], "dogru": 0},
+    {"soru": "V'nin solo albümünün adı nedir?", "siklar": ["Layover", "FACE", "Indigo", "D-DAY"], "dogru": 0},
+    {"soru": "Jimin'in solo albümünün adı nedir?", "siklar": ["FACE", "Layover", "Golden", "Indigo"], "dogru": 0},
+    {"soru": "Jungkook'un solo albümünün adı nedir?", "siklar": ["Golden", "FACE", "Layover", "Jack In The Box"], "dogru": 0},
+    {"soru": "Suga'nın 2023 solo albümünün adı nedir?", "siklar": ["D-DAY", "Agust D", "D-2", "D-1"], "dogru": 0},
+    {"soru": "BTS'in antoloji albümünün adı nedir?", "siklar": ["Proof", "BE", "Butter", "Wings"], "dogru": 0},
+    {"soru": "BT21 serisindeki uzaylı karakter hangisidir?", "siklar": ["TATA", "CHIMMY", "VAN", "KOYA"], "dogru": 0},
+    {"soru": "BT21 robot karakterinin adı nedir?", "siklar": ["VAN", "KOYA", "MANG", "RJ"], "dogru": 0},
+    {"soru": "BT21'deki 'SHOOKY' hangi yiyecektir?", "siklar": ["Kurabiye", "Ekmek", "Çikolata", "Süt"], "dogru": 0},
+    {"soru": "J-Hope'un en sevdiği renk hangisidir?", "siklar": ["Yeşil", "Kırmızı", "Mavi", "Siyah"], "dogru": 0},
+    {"soru": "RM'in müzik yapmaya başladığı zamanki underground adı neydi?", "siklar": ["Runch Randa", "Rap Monster", "MC RM", "King Rap"], "dogru": 0},
+    {"soru": "Suga'nın underground rap yaparken kullandığı isim neydi?", "siklar": ["Gloss", "Agust D", "Sugar", "Min PD"], "dogru": 0},
+    {"soru": "BTS çıkış yapmadan önce kaç yıl stajyerlik (trainee) yapmıştır?", "siklar": ["Değişkendir (1-3 yıl)", "5 yıl", "7 yıl", "10 yıl"], "dogru": 0},
+    {"soru": "Jin'in üniversitede okuduğu bölüm hangisidir?", "siklar": ["Tiyatro ve Oyunculuk", "Müzik", "Dans", "İşletme"], "dogru": 0},
+    {"soru": "BTS'in en çok izlenen YouTube klip izlenmesi hangisine aittir?", "siklar": ["Dynamite", "DNA", "Boy With Luv", "MIC Drop"], "dogru": 0},
+    {"soru": "BTS hangi Güney Kore şehrinde 'Yet To Come' ücretsiz konserini vermiştir?", "siklar": ["Busan", "Seul", "Incheon", "Daegu"], "dogru": 0},
+    {"soru": "Jungkook'un 2022 Dünya Kupası açılışındaki şarkısı nedir?", "siklar": ["Dreamers", "Seven", "Left and Right", "Stay Alive"], "dogru": 0},
+    {"soru": "Suga'nın IU ile ortak çalışması olan şarkı hangisidir?", "siklar": ["Eight", "People Pt.2", "Her ikisi de", "Hiçbiri"], "dogru": 2},
+    {"soru": "V'nin 'Sweet Night' şarkısı hangi K-Drama için hazırlanmıştır?", "siklar": ["Itaewon Class", "Hwarang", "Crash Landing on You", "Goblin"], "dogru": 0},
+    {"soru": "Jin'in askere gitmeden önce yayınladığı solo şarkı hangisidir?", "siklar": ["The Astronaut", "Epiphany", "Moon", "Awake"], "dogru": 0},
+    {"soru": "RM'in Sanat galerilerine olan ilgisi ve gezmesi hayranlarca nasıl adlandırılır?", "siklar": ["Namjooning", "RM Tours", "Art Mon", "Joon World"], "dogru": 0},
+    {"soru": "Jimin ve V'nin aynı liseye gitmesi ve yakın arkadaşlıklarını anlatan şarkı nedir?", "siklar": ["Friends", "Best Of Me", "Jamais Vu", "00:00"], "dogru": 0},
+    {"soru": "BTS'in 'IDOL' şarkısında düet yaptığı kadın rapçi kimdir?", "siklar": ["Nicki Minaj", "Cardi B", "Megan Thee Stallion", "Doja Cat"], "dogru": 0},
+    {"soru": "BTS'in 'Butter' remix versiyonunda kiminle iş birliği yapılmıştır?", "siklar": ["Megan Thee Stallion", "Lizzo", "Doja Cat", "Dua Lipa"], "dogru": 0},
+    {"soru": "Coldplay ile BTS'in ortak çalışması olan şarkı hangisidir?", "siklar": ["My Universe", "Higher Power", "A Head Full of Dreams", "Fix You"], "dogru": 0},
+    {"soru": "BTS üyelerinden hangisi oyun oynamayı en çok sever?", "siklar": ["Jin", "RM", "J-Hope", "Jimin"], "dogru": 0},
+    {"soru": "Jin'in kendisi için tasarladığı pijama koleksiyonunun adı nedir?", "siklar": ["Good Day / Bad Day", "RJ Sleep", "Worldwide Pj", "Moon Light"], "dogru": 0},
+    {"soru": "Jungkook'un yapmayı sevdiği video düzenleme işlerine verilen isim nedir?", "siklar": ["G.C.F (Golden Closets Film)", "JK Productions", "Kook Studio", "Golden Film"], "dogru": 0},
+    {"soru": "BTS'in 'RUN' şarkısı hangi yılda çıkmıştır?", "siklar": ["2015", "2016", "2014", "2017"], "dogru": 0},
+    {"soru": "BTS'in 2018'deki 'Love Yourself: Tear' albümünün çıkış parçası nedir?", "siklar": ["Fake Love", "DNA", "IDOL", "MIC Drop"], "dogru": 0},
+    {"soru": "J-Hope'un 'Jack In The Box' albümünün ana çıkış parçası nedir?", "siklar": ["MORE", "Arson", "Equal Sign", "Future"], "dogru": 1},
+    {"soru": "Suga'nın 'Agust D' ismi nereden gelmektedir?", "siklar": ["DT Suga kelimelerinin tersten yazılışı", "August Month", "Agust Town", "Suga Agust"], "dogru": 0},
+    {"soru": "BTS üyelerinden hangisinin ehliyeti yoktur?", "siklar": ["RM", "Jin", "Suga", "J-Hope"], "dogru": 0},
+    {"soru": "RM'in çok sık kaybettiği ve yenisini aldığı kişisel eşyası nedir?", "siklar": ["AirPods / Kulaklık", "Cüzdan", "Telefon", "Pasaport"], "dogru": 0},
+    {"soru": "V'nin sahnede ve fotoğraflarda sıkça yaptığı el işareti hangisidir?", "siklar": ["V (Zafer) İşareti", "Kalp İşareti", "Thumb Up", "Rock İşareti"], "dogru": 0},
+    {"soru": "BTS üyelerinden hangisi aşçılık konusunda grupta en yeteneklidir?", "siklar": ["Jin & Suga", "RM & V", "Jungkook & Jimin", "J-Hope & RM"], "dogru": 0},
+    {"soru": "BTS ne zaman ilk Daesang (Büyük Ödül) ödülünü kazanmıştır?", "siklar": ["2016", "2015", "2017", "2018"], "dogru": 0},
+    {"soru": "BTS'in MelOn Music Awards 2016'da Yılın Albümü ödülünü kazandığı albüm nedir?", "siklar": ["The Most Beautiful Moment in Life: Young Forever", "WINGS", "HYYH Pt.2", "Dark & Wild"], "dogru": 0},
+    {"soru": "Jimin'in 'Filter' şarkısı hangi albümdedir?", "siklar": ["Map of the Soul: 7", "BE", "Love Yourself: Answer", "Proof"], "dogru": 0},
+    {"soru": "V'nin 'Singularity' şarkısının türü nedir?", "siklar": ["R&B / Neo-Soul", "Hip Hop", "Pop", "Rock"], "dogru": 0},
+    {"soru": "Jungkook'un 'Euphoria' şarkısının prodüktörlerinden biri kimdir?", "siklar": ["DJ Swivel", "David Guetta", "Calvin Harris", "Skrillex"], "dogru": 0},
+    {"soru": "BTS üyeleri hangi platformda düzenli canlı yayınlar açarak hayranlarla buluşur?", "siklar": ["Weverse", "V Live (Eski)", "Her ikisi de", "Instagram"], "dogru": 2},
+    {"soru": "BTS'in Kore kültürünü ve dilini tanıtmak için hazırlanan eğitim serisi nedir?", "siklar": ["Learn! KOREAN with BTS", "BTS School", "Korean with ARMY", "Talk BTS"], "dogru": 0},
+    {"soru": "BTS'in 'MIC Drop' remixini hangi ünlü DJ yapmıştır?", "siklar": ["Steve Aoki", "Marshmello", "Zedd", "Martin Garrix"], "dogru": 0},
+    {"soru": "Suga'nın en sevdiği içecek nedir?", "siklar": ["Iced Americano", "Yeşil Çay", "Süt", "Meyve Suyu"], "dogru": 0},
+    {"soru": "J-Hope'un lakaplarından biri olan 'Sunhine' ne anlama gelir?", "siklar": ["Güneş Işığı", "Neşe Kaynağı", "Umut", "Yıldız"], "dogru": 0},
+    {"soru": "BTS üyelerinin hepsinin vücutlarında ortak olan dövme hangisidir?", "siklar": ["7 Sayısı", "ARMY Yazısı", "Kore Haritası", "Mor Kalp"], "dogru": 0},
+    {"soru": "BTS üyelerinin dostluk dövmesi olan '7' sayısı Jimin'in neresindedir?", "siklar": ["Parmağında", "Boynunda", "Bileğinde", "Kulağının arkasında"], "dogru": 0},
+    {"soru": "BTS'in 'Life Goes On' klibinin yönetmeni kimdir?", "siklar": ["Jungkook", "RM", "V", "Suga"], "dogru": 0},
+    {"soru": "BTS'in 'Black Swan' şarkısı hangi temayı işler?", "siklar": ["Sanatçı olarak tutkusunu kaybetme korkusu", "Aşk acısı", "Savaş ve barış", "Gençlik heyecanı"], "dogru": 0},
+    {"soru": "Jin'in 'Super Tuna' şarkısı ne tür bir şarkıdır?", "siklar": ["Trot / Eğlenceli Şarkı", "Hip Hop", "Ağır Balad", "Rock"], "dogru": 0},
+    {"soru": "Suga'nın 'Daechwita' şarkısında kullandığı geleneksel Kore enstrümanı teması nedir?", "siklar": ["Geleneksel Askeri Müzik (Daechwita)", "Gayageum", "Haegum", "Janggu"], "dogru": 0},
+    {"soru": "BTS'in ilk stüdyo albümünün adı nedir?", "siklar": ["Dark & Wild", "Skool Luv Affair", "O!RUL8,2?", "2 Cool 4 Skool"], "dogru": 0},
+    {"soru": "BTS'in çıkış yapmadan önceki geçici grup isim adaylarından biri neydi?", "siklar": ["Young Nation", "Big Kids", "BTS Boys", "Bangtan World"], "dogru": 0}
+]
+
+
+# --- EĞLENCE KOMUTLARI VERİ HAVUZU (METİN VE GIF LISTESİ) ---
+eglence_yanitlari = {
+    "ucanguvercin": {
+        "metinler": [
+            "🕊️💨 **{author}**, **{target}** kişisine uçan döner tekmeyle güvercin attı!",
+            "🕊️💥 **{author}**, **{target}** kafasına füzeli güvercin fırlattı!",
+            "🕊️✨ **{author}**, **{target}** üzerine kanatlı felaket saldı!",
+            "🕊️🔥 **{author}**, **{target}** için göklerden güvercin indirdi!",
+            "🕊️💨 **{author}**, **{target}** kişisini güvercin yağmuruna tuttu!"
+        ],
+        "gifler": [
+            "https://media.giphy.com/media/l3V0lsG3X7AZpnCyA/giphy.gif",
+            "https://media.giphy.com/media/26Ff2bTAKmg5yTX2w/giphy.gif",
+            "https://media.giphy.com/media/l2JhnvTeLBbA1THCO/giphy.gif",
+            "https://media.giphy.com/media/3o6ZtaO9BZHcOjmErm/giphy.gif",
+            "https://media.giphy.com/media/d4Amo8ySInWJq/giphy.gif"
+        ]
+    },
+    "kiss": {
+        "metinler": [
+            "💋✨ **{author}**, **{target}** yanağına sulu kocaman bir öpücük kondurdu!",
+            "🌸💖 **{author}**, **{target}** kişisini sevgiye boğup öptü!",
+            "💋🎉 **{author}**, **{target}** yanağında iz bırakan bir öpücük bıraktı!",
+            "💖✨ **{author}**, **{target}** kişisini ansızın öpüp kaçtı!",
+            "💋💜 **{author}**, **{target}** için en tatlı öpücüğünü gönderdi!"
+        ],
+        "gifler": [
+            "https://media.giphy.com/media/G3va39rn8E436/giphy.gif",
+            "https://media.giphy.com/media/Kro421VyTABEc/giphy.gif",
+            "https://media.giphy.com/media/vUrwEOLecw3pm/giphy.gif",
+            "https://media.giphy.com/media/FqSPe4eabAfUQ/giphy.gif",
+            "https://media.giphy.com/media/nyGFcsP0kAobm/giphy.gif"
+        ]
+    },
+    "op": {
+        "metinler": [
+            "💋🔥 **{author}**, **{target}** tutkuyla öpücüklere boğdu!",
+            "💍💖 **{author}**, **{target}** romantik bir şekilde öptü!",
+            "💋✨ **{author}**, **{target}** dudaklarına tatlı bir öpücük kondurdu!",
+            "🔥💜 **{author}**, **{target}** kişisini sevmekten öpücüklere doyamadı!",
+            "💋🌸 **{author}**, **{target}** için en tutkulu öpücüğünü kondurdu!"
+        ],
+        "gifler": [
+            "https://media.giphy.com/media/fVzsI4L3178nS/giphy.gif",
+            "https://media.giphy.com/media/1081W19OSVnW3C/giphy.gif",
+            "https://media.giphy.com/media/wO1D3d9i45f8b5L6f7/giphy.gif",
+            "https://media.giphy.com/media/G3va39rn8E436/giphy.gif",
+            "https://media.giphy.com/media/vUrwEOLecw3pm/giphy.gif"
+        ]
+    },
+    "saril": {
+        "metinler": [
+            "🫂💖 **{author}**, **{target}** kişisine sımsıkı sarıldı!",
+            "🌸✨ **{author}**, **{target}** kişisini kollarının arasına alıp sarıldı!",
+            "🫂💜 **{author}**, **{target}** için hiç bırakmayacak gibi sarıldı!",
+            "🎉💖 **{author}**, **{target}** kişisine sıcacık bir sarılma hediye etti!",
+            "🫂✨ **{author}**, **{target}** dertlerini unutturacak gibi sarıldı!"
+        ],
+        "gifler": [
+            "https://media.giphy.com/media/PHZ7v9tfQu0o0/giphy.gif",
+            "https://media.giphy.com/media/3znBrks5PZBUc/giphy.gif",
+            "https://media.giphy.com/media/sUIZWMnfd4Mb6/giphy.gif",
+            "https://media.giphy.com/media/u9BxI33C29Psk/giphy.gif",
+            "https://media.giphy.com/media/l41YkxvU8c7J7Bba8/giphy.gif"
+        ]
+    },
+    "slaps": {
+        "metinler": [
+            "🖐️💥 **{author}**, **{target}** yüzüne okkalı bir tokat yapıştırdı!",
+            "💥🛑 **{author}**, **{target}** kişisini şamarlayarak kendine getirdi!",
+            "🖐️🔥 **{author}**, **{target}** suratına osmanlı tokadı indirdi!",
+            "💥✨ **{author}**, **{target}** kişisini tokat manyağı yaptı!",
+            "🖐️⚡ **{author}**, **{target}** yanağına şaplağı yapıştırdı!"
+        ],
+        "gifler": [
+            "https://media.giphy.com/media/Gf3AUz3eBNbTW/giphy.gif",
+            "https://media.giphy.com/media/mEtSQlx3yvL8g0X859/giphy.gif",
+            "https://media.giphy.com/media/j3iGKfXRKlLqw/giphy.gif",
+            "https://media.giphy.com/media/Zau0yRL15t84w/giphy.gif",
+            "https://media.giphy.com/media/alsE5sBeBCB4a0x446/giphy.gif"
+        ]
+    },
+    "efkarolcer": {
+        "metinler": [
+            "🚬 **{target}** bugün **%{val}** efkarlı... Yak yak yak! 🔥",
+            "🥀 **{target}** efkar oranı: **%{val}**... Derdin neyse anlat dinleyelim 💔",
+            "🍷 **{target}** %**{val}** efkarla arka fonda Müslüm Gürses açtı...",
+            "🚬 **{target}** kişisinin efkarı dağları aştı! Oran: **%{val}** 🔥",
+            "💔 **{target}** bugün %**{val}** dertli... Çay koyun aga!"
+        ],
+        "gifler": [
+            "https://media.giphy.com/media/ISOckXU1vnEG4/giphy.gif",
+            "https://media.giphy.com/media/d22NqpjOcXZ8Q/giphy.gif",
+            "https://media.giphy.com/media/7SF5scGB2AFrgsXP63/giphy.gif",
+            "https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif",
+            "https://media.giphy.com/media/W0c3xcZ3F1d0EYYb0f/giphy.gif"
+        ]
+    }
+}
+
     
