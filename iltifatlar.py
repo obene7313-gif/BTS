@@ -334,7 +334,7 @@ iltifatlar = [
 
     
 # --- 100 ADET YILDIZLI VE BOL EMOJİLİ SELAMLAMA LİSTESİ ---
-selam_cevaplari = [
+selamlar_cevaplari = [
     "Ooo hoş geldin canım! Sunucuya bir güneş doğdu resmen! ☀️✨",
     "Selamlar parıldayan yıldızım! Geldin ya, buralar şenlendi! ⭐🥰",
     "Hoş geldin balım! Gözümüz yollarda kalmıştı valla! 🍯👀",
