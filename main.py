@@ -479,7 +479,6 @@ async def slots(ctx, miktar: int):
     if miktar > bakiye or miktar <= 0:
         await ctx.send("❌ Yetersiz bakiye! 💔")
         return
-
 emojiler = ["🎰", "🍇", "🍒", "🍋", "💎"]
     s1, s2, s3 = random.choice(emojiler), random.choice(emojiler), random.choice(emojiler)
     
