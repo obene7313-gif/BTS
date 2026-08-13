@@ -601,4 +601,4 @@ TOKEN = os.getenv("TOKEN")
 if TOKEN:
     bot.run(TOKEN)
 else:
-    print("❌ HATA: Render üzerinde 'TOKEN' isimli Environment Variable bulunamadı!")
+    print("❌ HATA: Render üzerinde 'DISCORD_BOT_TOKEN' isimli Environment Variable bulunamadı!")
