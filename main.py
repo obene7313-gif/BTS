@@ -479,7 +479,8 @@ async def slots(ctx, miktar: int):
     if miktar > bakiye or miktar <= 0:
         await ctx.send("❌ Yetersiz bakiye! 💔")
         return
-emojiler = ["🎰", "🍇", "🍒", "🍋", "💎"]
+
+    emojiler = ["🎰", "🍇", "🍒", "🍋", "💎"]
     s1, s2, s3 = random.choice(emojiler), random.choice(emojiler), random.choice(emojiler)
     
     if s1 == s2 == s3:
@@ -492,6 +493,7 @@ emojiler = ["🎰", "🍇", "🍒", "🍋", "💎"]
     
     save_data(db)
     await ctx.send(msg)
+    
 
 @bot.command()
 async def join(ctx, kullanici: discord.Member, miktar: int):
