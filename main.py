@@ -655,7 +655,6 @@ async def sarki(ctx, *, arama: str):
 
     async with ctx.typing():
         try:
-            # Spotify Linki ise YouTube arama terimine çevir
             if "open.spotify.com/track" in arama:
                 arama = arama.split("track/")[1].split("?")[0]
 
@@ -686,17 +685,41 @@ async def dur(ctx):
 
 @bot.command()
 async def spty(ctx, kullanici: discord.Member = None):
-    kullanici = kullanici or ctx.author
-    for act in kullanici.activities:
-        if isinstance(act, discord.Spotify):
-            embed = discord.Embed(title=f"🎧 {kullanici.display_name} Spotify Dinliyor 🌸", color=discord.Color.green())
-            embed.add_field(name="🎵 Şarkı", value=act.title, inline=True)
-            embed.add_field(name="🎤 Sanatçı", value=act.artist, inline=True)
-            embed.add_field(name="💿 Albüm", value=act.album, inline=False)
-            embed.set_thumbnail(url=act.album_cover_url)
-            await ctx.send(embed=embed)
-            return
-    await ctx.send(f"🌸 {kullanici.display_name} şu an Spotify üzerinde şarkı dinlemiyor! ✨")
+    hedef = kullanici or ctx.author
+    
+    spotify_activity = None
+    for activity in hedef.activities:
+        if isinstance(activity, discord.Spotify):
+            spotify_activity = activity
+            break
+
+    if spotify_activity:
+        toplam_sure = spotify_activity.duration.total_seconds()
+        gecen_sure = (datetime.utcnow() - spotify_activity.created_at).total_seconds()
+        gecen_sure = min(gecen_sure, toplam_sure)
+        
+        gecen_fmt = f"{int(gecen_sure // 60):02d}:{int(gecen_sure % 60):02d}"
+        toplam_fmt = f"{int(toplam_sure // 60):02d}:{int(toplam_sure % 60):02d}"
+        
+        yuzde = gecen_sure / toplam_sure if toplam_sure > 0 else 0
+        doluluk = int(yuzde * 10)
+        progress_bar = "▬" * doluluk + "🔘" + "▬" * (10 - doluluk)
+
+        embed = discord.Embed(
+            title=f"🎧 {hedef.display_name} Spotify Dinliyor 🌸", 
+            color=discord.Color.from_rgb(30, 215, 96)
+        )
+        embed.add_field(name="🎵 Şarkı", value=f"**[{spotify_activity.title}](https://open.spotify.com/track/{spotify_activity.track_id})**", inline=False)
+        embed.add_field(name="🎤 Sanatçı", value=f"`{', '.join(spotify_activity.artists)}`", inline=True)
+        embed.add_field(name="💿 Albüm", value=f"`{spotify_activity.album}`", inline=True)
+        embed.add_field(name="⏱️ Süre", value=f"`{gecen_fmt}` {progress_bar} `{toplam_fmt}`", inline=False)
+        
+        embed.set_thumbnail(url=spotify_activity.album_cover_url)
+        embed.set_footer(text="Amortentia Müzik Sistemi ✨", icon_url=bot.user.display_avatar.url)
+        
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send(f"🌸 **{hedef.display_name}** şu an Spotify üzerinde şarkı dinlemiyor veya Discord durumunda Spotify görünmüyor! ✨")
 
 # ==================== BİLGİ & DİĞER KOMUTLAR ====================
 
