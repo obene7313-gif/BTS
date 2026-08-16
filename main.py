@@ -55,7 +55,13 @@ def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             try:
-                return json.load(f)
+                data = json.load(f)
+                if "bakiye" not in data: data["bakiye"] = {}
+                if "afk" not in data: data["afk"] = {}
+                if "haftalik" not in data: data["haftalik"] = {}
+                if "ayarlar" not in data: data["ayarlar"] = {"kufur": False, "reklam": False, "log": None, "hghb": None, "spam_saniye": 0}
+                if "karaliste" not in data: data["karaliste"] = []
+                return data
             except:
                 pass
     return {
@@ -114,10 +120,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **FFMPEG_OPTIONS), data=data)
 
-# 30 Saniyelik, Herkese Açık ve Denemeli Quiz Görünümü
+# Quiz Görünümü
 class QuizView(discord.ui.View):
     def __init__(self, dogru_index, options):
-        super().__init__(timeout=30.0) # Süre 30 saniye yapıldı
+        super().__init__(timeout=30.0)
         self.dogru_index = dogru_index
         self.is_finished = False
 
@@ -136,9 +142,8 @@ class QuizView(discord.ui.View):
 
             if idx == self.dogru_index:
                 self.is_finished = True
-                clicked_button.style = discord.ButtonStyle.success # Yeşil renk
+                clicked_button.style = discord.ButtonStyle.success
                 
-                # Tüm butonları devre dışı bırak
                 for item in self.children:
                     item.disabled = True
 
@@ -153,13 +158,41 @@ class QuizView(discord.ui.View):
                 self.stop()
             else:
                 clicked_button.disabled = True
-                clicked_button.style = discord.ButtonStyle.danger # Kırmızı renk
+                clicked_button.style = discord.ButtonStyle.danger
                 
                 await interaction.response.edit_message(
                     content=f"💥 **{interaction.user.mention}** yanlış şıkka bastı! Ama yarışma devam ediyor, doğruyu bulana kadar denemeye devam edin! 🌸✨", 
                     view=self
                 )
         return callback
+
+# --- KOLAY MATEMATİK SORUSU ÜRETİCİ ---
+def kolay_matematik_uret():
+    islem_turu = random.choice(["+", "-", "*"])
+    
+    if islem_turu == "+":
+        n1, n2 = random.randint(5, 30), random.randint(5, 30)
+        ans = n1 + n2
+        soru_metni = f"{n1} + {n2}"
+    elif islem_turu == "-":
+        n1 = random.randint(10, 40)
+        n2 = random.randint(1, n1)
+        ans = n1 - n2
+        soru_metni = f"{n1} - {n2}"
+    else:
+        n1, n2 = random.randint(2, 9), random.randint(2, 9)
+        ans = n1 * n2
+        soru_metni = f"{n1} x {n2}"
+
+    siklar = [str(ans), str(ans + random.choice([2, 3])), str(ans - random.choice([1, 2])), str(ans + 5)]
+    siklar = list(dict.fromkeys(siklar))
+    while len(siklar) < 4:
+        farkli_sik = str(ans + random.randint(6, 15))
+        if farkli_sik not in siklar:
+            siklar.append(farkli_sik)
+            
+    random.shuffle(siklar)
+    return soru_metni, ans, siklar
 
 # --- ETKİNLİKLER ---
 @bot.event
@@ -234,15 +267,14 @@ async def on_message(message):
     if random.random() < 0.02:
         await message.reply(f"🌸✨ {random.choice(iltifatlar)}")
 
-    if random.random() < 0.05:
-        quiz_tur = random.choice(["math", "bts"])
+    # %7 Çıkma İhtimali - %70 Matematik / %30 BTS
+    if random.random() < 0.07:
+        quiz_tur = random.choices(["math", "bts"], weights=[70, 30])[0]
+        
         if quiz_tur == "math":
-            n1, n2 = random.randint(10, 30), random.randint(10, 30)
-            ans = n1 * n2
-            siklar = [str(ans), str(ans + 5), str(ans - 5), str(ans + 10)]
-            random.shuffle(siklar)
+            soru_metni, ans, siklar = kolay_matematik_uret()
             view = QuizView(siklar.index(str(ans)), siklar)
-            await message.channel.send(f"🧮 **MATEMATİK SORUSU! (ULTRA ZOR)** 🌸✨\n\n**{n1} x {n2} = ?**\n*Cevaplamak için 30 saniyeniz var! Herkes doğruyu bulana kadar deneyebilir!*", view=view)
+            await message.channel.send(f"🧮 **KOLAY MATEMATİK SORUSU!** 🌸✨\n\n**{soru_metni} = ?**\n*Cevaplamak için 30 saniyeniz var! Herkes doğruyu bulana kadar deneyebilir!*", view=view)
         elif quiz_tur == "bts":
             q = random.choice(bts_sorulari)
             view = QuizView(q["dogru"], q["siklar"])
@@ -411,25 +443,17 @@ async def kacsm(ctx, kullanici: discord.Member = None):
     cumleler_kucuk = [
         f"📏 {hedef.mention} kişisinin ölçümü yapıldı: **{cm} cm**! Minnakmış laa bu 🌸🤏",
         f"📏 **{hedef.display_name}** için sonuç: **{cm} cm**! Bayağı minnakmış laa bu, cebimde taşırım ben bunu! ✨💖",
-        f"📏 **{hedef.display_name}** boyutu: **{cm} cm**! Minnakmış laa bu, nazar değmesin tatlılığa! 🌸🥺",
-        f"📏 Sonuçlar geldi: **{cm} cm**! Ayy minnakmış laa bu, mikroskopla mı baksak naptık? 🔎✨",
-        f"📏 {hedef.mention} **{cm} cm** çıktı! Minnakmış laa bu, fındık kadar bi şey zaten! 🌸💖"
+        f"📏 **{hedef.display_name}** boyutu: **{cm} cm**! Minnakmış laa bu, nazar değmesin tatlılığa! 🌸🥺"
     ]
 
     cumleler_orta = [
         f"📏 {hedef.mention} ölçüldü: **{cm} cm**! Oha bununki ne kadar da büyük! 🌸✨",
-        f"📏 **{hedef.display_name}** sonuçları şok etti: **{cm} cm**! Oha bununki ne kadar da büyük, maşallah deyin! 💖🔥",
-        f"📏 Vay be! **{hedef.display_name}** boyutu: **{cm} cm**! Oha bununki ne kadar da büyük, gözlerim yaşardı! ✨🌸",
-        f"📏 Cetvel yetmedi: **{cm} cm**! Oha bununki ne kadar da büyük, nereye sığdırıyorsun bunu? 💖💥",
-        f"📏 {hedef.mention} için dev sonuç: **{cm} cm**! Oha bununki ne kadar da büyük, helal olsun! 🌸✨"
+        f"📏 **{hedef.display_name}** sonuçları şok etti: **{cm} cm**! Oha bununki ne kadar da büyük, maşallah deyin! 💖🔥"
     ]
 
     cumleler_buyuk = [
         f"📏 {hedef.mention} ölçüldü: **{cm} cm**! Mutantmış olm sen gibi bu ne böyle?! 🚨🌸",
-        f"📏 **{hedef.display_name}** rekor kırdı: **{cm} cm**! Mutantmış olm sen, insani boyutları aşmışsın! 💖😱",
-        f"📏 Bu bir kaza olmalı: **{cm} cm**! Mutantmış olm sen, köprü ayağı mı dikiyorsun sunucuya? ✨💥",
-        f"📏 {hedef.mention} için sonuç: **{cm} cm**! Mutantmış olm sen, ruhsat aldın mı buna? 🌸🔥",
-        f"📏 İnanılmaz! **{hedef.display_name}** boyutu: **{cm} cm**! Mutantmış olm sen, uzaydan bile görünüyor! 💖🚀"
+        f"📏 **{hedef.display_name}** rekor kırdı: **{cm} cm**! Mutantmış olm sen, insani boyutları aşmışsın! 💖😱"
     ]
 
     if cm <= 17:
@@ -595,7 +619,6 @@ async def yazitura(ctx, miktar: int, secim: str):
         await ctx.send(f"💥 **Kaybettin!** Para `{sonuc}` geldi. **{miktar} BTS Parası** cüzdanından uçtu! 💸🌸")
     save_data(db)
 
-# GÜNCELLENEN SLOTS KOMUTU
 @bot.command()
 async def slots(ctx, miktar: int = 100):
     uid = str(ctx.author.id)
@@ -608,7 +631,7 @@ async def slots(ctx, miktar: int = 100):
     s1, s2, s3 = random.choice(emojiler), random.choice(emojiler), random.choice(emojiler)
     
     if s1 == s2 == s3:
-        net_kazanc = miktar * 2 # Toplam katlama kazancı
+        net_kazanc = miktar * 2
         db["bakiye"][uid] += net_kazanc
         msg = f"🎰 **{ctx.author.display_name}** slots çeviriyor...\n| {s1} | {s2} | {s3} |\n\n🎉 **TEBRİKLER!** 3 tuttu ve **+{net_kazanc} BTS Parası** cüzdanına eklendi! 💎✨🌸"
     else:
@@ -648,7 +671,7 @@ async def rich(ctx):
             pass
     await ctx.send(embed=embed)
 
-# ==================== MÜZİK KOMUTLARI (YT/SPOTIFY DESTEKLİ) ====================
+# ==================== MÜZİK KOMUTLARI ====================
 
 @bot.command(aliases=["play", "p"])
 async def sarki(ctx, *, arama: str):
@@ -740,6 +763,12 @@ async def quiz(ctx):
     view = QuizView(q["dogru"], q["siklar"])
     await ctx.send(f"💜 **BTS BİLGİ SORUSU!** ✨🌸\n\n{q['soru']}\n*Cevaplamak için 30 saniyeniz var! Herkes doğruyu bulana kadar deneyebilir!*", view=view)
 
+@bot.command(aliases=["mat", "matematiksorusu"])
+async def matematik(ctx):
+    soru_metni, ans, siklar = kolay_matematik_uret()
+    view = QuizView(siklar.index(str(ans)), siklar)
+    await ctx.send(f"🧮 **KOLAY MATEMATİK SORUSU!** 🌸✨\n\n**{soru_metni} = ?**\n*Cevaplamak için 30 saniyeniz var! Herkes doğruyu bulana kadar deneyebilir!*", view=view)
+
 @bot.command()
 async def bts(ctx):
     uyeler = ["RM 🐨", "Jin 🐹", "Suga 🐱", "J-Hope 🐿️", "Jimin 🐥", "V 🐯", "Jungkook 🐰"]
@@ -771,11 +800,11 @@ async def ping(ctx):
 
 @bot.command()
 async def yardim(ctx):
-    embed = discord.Embed(title="🌸 Amortentia Bot Komut Menüsü 🎀", description="Tüm komutlar sevgilerle hazırlandı ✨💖", color=discord.Color.pink())
+    embed = discord.Embed(title="🌸 Amortentia Bot Komut Menüsü Ribbon", description="Tüm komutlar sevgilerle hazırlandı ✨💖", color=discord.Color.pink())
     embed.add_field(name="👑 Yetkili Komutları", value="`!ayarlar`, `!kufurengel`, `!reklamengel`, `!spamengel`, `!logayar`, `!hghb`, `!karaliste`, `!sil`, `!sustur`, `!ac`, `!kick`, `!ban`, `!unban`, `!nuke`, `!lock`, `!unlock`, `!rolver`, `!rolal`, `!amortentia`", inline=False)
     embed.add_field(name="💖 Eğlence Komutları", value="`!kacsm`, `!afk`, `!ucanguvercin`, `!kiss`, `!op`, `!saril`, `!slaps`, `!efkarolcer`, `!askolcer`, `!sanslisayi`, `!ship`, `!ship2`, `!eat`, `!saat`", inline=False)
     embed.add_field(name="💰 Ekonomi Komutları", value="`!haftalık`, `!para`, `!yazitura`, `!slots`, `!join`, `!rich`", inline=False)
-    embed.add_field(name="🎶 Müzik & Bilgi Komutları", value="`!sarki <isim/link>`, `!dur`, `!soru`, `!spty`, `!bts`, `!sunucu`, `!kullanici`, `!ping`", inline=False)
+    embed.add_field(name="🎶 Müzik & Bilgi Komutları", value="`!sarki <isim/link>`, `!dur`, `!soru`, `!matematik`, `!spty`, `!bts`, `!sunucu`, `!kullanici`, `!ping`", inline=False)
     await ctx.send(embed=embed)
 
 # TOKEN VE BAŞLATMA
