@@ -689,8 +689,13 @@ async def sarki(ctx, *, arama: str):
 
     async with ctx.typing():
         try:
+            # Spotify linki geldiyse ID'yi temizleyip arama terimine çevirir
             if "open.spotify.com/track" in arama:
                 arama = arama.split("track/")[1].split("?")[0]
+            
+            # YouTube linki değilse doğrudan YouTube üzerinde arama yapar
+            if not arama.startswith("http://") and not arama.startswith("https://"):
+                arama = f"ytsearch:{arama}"
 
             player = await YTDLSource.from_url(arama, loop=bot.loop, stream=True)
             
