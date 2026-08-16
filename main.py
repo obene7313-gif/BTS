@@ -78,7 +78,7 @@ def save_data(data):
 
 db = load_data()
 
-# --- YOUTUBE / SPOTIFY MÜZİK MOTORU ---
+# --- MÜZİK MOTORU AYARLARI (YOUTUBE ENGELİNİ AŞAN YAPILANMA) ---
 YTDL_OPTIONS = {
     'format': 'bestaudio/best',
     'extractaudio': True,
@@ -91,7 +91,7 @@ YTDL_OPTIONS = {
     'logtostderr': False,
     'quiet': True,
     'no_warnings': True,
-    'default_search': 'auto',
+    'default_search': 'scsearch',  # YouTube engeline takılmamak için SoundCloud araması
     'source_address': '0.0.0.0'
 }
 
@@ -689,15 +689,16 @@ async def sarki(ctx, *, arama: str):
 
     async with ctx.typing():
         try:
-            # Spotify linki geldiyse ID'yi temizleyip arama terimine çevirir
+            # YouTube/Spotify yönlendirmesini SoundCloud motoruna aktarır
             if "open.spotify.com/track" in arama:
                 arama = arama.split("track/")[1].split("?")[0]
             
-            # YouTube linki değilse doğrudan YouTube üzerinde arama yapar
             if not arama.startswith("http://") and not arama.startswith("https://"):
-                arama = f"ytsearch:{arama}"
+                arama_sorgu = f"scsearch:{arama}"
+            else:
+                arama_sorgu = arama
 
-            player = await YTDLSource.from_url(arama, loop=bot.loop, stream=True)
+            player = await YTDLSource.from_url(arama_sorgu, loop=bot.loop, stream=True)
             
             if voice_client.is_playing():
                 voice_client.stop()
