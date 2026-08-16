@@ -114,13 +114,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **FFMPEG_OPTIONS), data=data)
 
-# 15 Saniyelik Butonlu Test Görünümü
+# 30 Saniyelik, Herkese Açık ve Denemeli Quiz Görünümü
 class QuizView(discord.ui.View):
-    def __init__(self, dogru_index, options, author):
-        super().__init__(timeout=15.0)
+    def __init__(self, dogru_index, options):
+        super().__init__(timeout=30.0) # Süre 30 saniye yapıldı
         self.dogru_index = dogru_index
-        self.author = author
-        self.answered = False
+        self.is_finished = False
 
         for idx, option in enumerate(options):
             button = discord.ui.Button(label=option, style=discord.ButtonStyle.secondary, custom_id=f"quiz_{idx}")
@@ -129,24 +128,37 @@ class QuizView(discord.ui.View):
 
     def create_callback(self, idx):
         async def callback(interaction: discord.Interaction):
-            if interaction.user.id != self.author.id:
-                await interaction.response.send_message("🌸 Bu quizi sadece soruyu tetikleyen tatlı kişi cevaplayabilir! ✨", ephemeral=True)
-                return
-            if self.answered:
+            if self.is_finished:
+                await interaction.response.send_message("🌸 Bu yarışma zaten bitti şekerim! ✨", ephemeral=True)
                 return
 
-            self.answered = True
-            for item in self.children:
-                item.disabled = True
+            clicked_button = [item for item in self.children if item.custom_id == f"quiz_{idx}"][0]
 
             if idx == self.dogru_index:
+                self.is_finished = True
+                clicked_button.style = discord.ButtonStyle.success # Yeşil renk
+                
+                # Tüm butonları devre dışı bırak
+                for item in self.children:
+                    item.disabled = True
+
                 uid = str(interaction.user.id)
                 db["bakiye"][uid] = db["bakiye"].get(uid, 0) + 500
                 save_data(db)
-                await interaction.response.edit_message(content=f"🎉 **Doğru Cevap!** {interaction.user.mention} **500 BTS Parası** kazandı! Yeni bakiye: `{db['bakiye'][uid]}` 💖✨", view=self)
+
+                await interaction.response.edit_message(
+                    content=f"🎉 **Doğru Cevap!** {interaction.user.mention} doğru şıkkı buldu ve **500 BTS Parası** kazandı! Yeni bakiye: `{db['bakiye'][uid]}` 💖✨", 
+                    view=self
+                )
+                self.stop()
             else:
-                await interaction.response.edit_message(content=f"💥 **Yanlış Cevap!** Ah be şekerim, şansını bir dahakine dene! 💔🌸", view=self)
-            self.stop()
+                clicked_button.disabled = True
+                clicked_button.style = discord.ButtonStyle.danger # Kırmızı renk
+                
+                await interaction.response.edit_message(
+                    content=f"💥 **{interaction.user.mention}** yanlış şıkka bastı! Ama yarışma devam ediyor, doğruyu bulana kadar denemeye devam edin! 🌸✨", 
+                    view=self
+                )
         return callback
 
 # --- ETKİNLİKLER ---
@@ -229,12 +241,12 @@ async def on_message(message):
             ans = n1 * n2
             siklar = [str(ans), str(ans + 5), str(ans - 5), str(ans + 10)]
             random.shuffle(siklar)
-            view = QuizView(siklar.index(str(ans)), siklar, message.author)
-            await message.channel.send(f"🧮 **MATEMATİK SORUSU! (ULTRA ZOR)** 🌸✨\n\n**{n1} x {n2} = ?**\n*Cevaplamak için 15 saniyen var!*", view=view)
+            view = QuizView(siklar.index(str(ans)), siklar)
+            await message.channel.send(f"🧮 **MATEMATİK SORUSU! (ULTRA ZOR)** 🌸✨\n\n**{n1} x {n2} = ?**\n*Cevaplamak için 30 saniyeniz var! Herkes doğruyu bulana kadar deneyebilir!*", view=view)
         elif quiz_tur == "bts":
             q = random.choice(bts_sorulari)
-            view = QuizView(q["dogru"], q["siklar"], message.author)
-            await message.channel.send(f"💜 **BTS BİLGİ SORUSU!** ✨🌸\n\n{q['soru']}\n*Cevaplamak için 15 saniyen var!*", view=view)
+            view = QuizView(q["dogru"], q["siklar"])
+            await message.channel.send(f"💜 **BTS BİLGİ SORUSU!** ✨🌸\n\n{q['soru']}\n*Cevaplamak için 30 saniyeniz var! Herkes doğruyu bulana kadar deneyebilir!*", view=view)
 
     await bot.process_commands(message)
 
@@ -577,12 +589,13 @@ async def yazitura(ctx, miktar: int, secim: str):
     sonuc = random.choice(["yazi", "tura"])
     if secim.lower() == sonuc:
         db["bakiye"][uid] += miktar
-        await ctx.send(f"🎉 **Kazandın!** Para `{sonuc}` geldi ve **+{miktar * 2} BTS Parası** kazandın! 🪙✨🌸")
+        await ctx.send(f"🎉 **Kazandın!** Para `{sonuc}` geldi ve **+{miktar} BTS Parası** kazandın! 🪙✨🌸")
     else:
         db["bakiye"][uid] -= miktar
         await ctx.send(f"💥 **Kaybettin!** Para `{sonuc}` geldi. **{miktar} BTS Parası** cüzdanından uçtu! 💸🌸")
     save_data(db)
 
+# GÜNCELLENEN SLOTS KOMUTU
 @bot.command()
 async def slots(ctx, miktar: int = 100):
     uid = str(ctx.author.id)
@@ -594,15 +607,13 @@ async def slots(ctx, miktar: int = 100):
     emojiler = ["🍓", "🍒", "🍊", "🍇", "💎", "🍋"]
     s1, s2, s3 = random.choice(emojiler), random.choice(emojiler), random.choice(emojiler)
     
-    await ctx.send(f"🎰 **{ctx.author.display_name}** slots çeviriyor...\n| {s1} | {s2} | {s3} |")
-
     if s1 == s2 == s3:
-        kazanc = miktar * 3
-        db["bakiye"][uid] += kazanc
-        msg = f"🎉 **TEBRİKLER!** 3 katı kazandın: **+{kazanc} BTS Parası** cüzdanına eklendi! 💎✨🌸"
+        net_kazanc = miktar * 2 # Toplam katlama kazancı
+        db["bakiye"][uid] += net_kazanc
+        msg = f"🎰 **{ctx.author.display_name}** slots çeviriyor...\n| {s1} | {s2} | {s3} |\n\n🎉 **TEBRİKLER!** 3 tuttu ve **+{net_kazanc} BTS Parası** cüzdanına eklendi! 💎✨🌸"
     else:
         db["bakiye"][uid] -= miktar
-        msg = f"💥 **Kaybettin! {miktar} BTS Parası** cüzdanından uçtu. 💸🌸"
+        msg = f"🎰 **{ctx.author.display_name}** slots çeviriyor...\n| {s1} | {s2} | {s3} |\n\n💥 **Kaybettin! {miktar} BTS Parası** cüzdanından uçtu. 💸🌸"
     
     save_data(db)
     await ctx.send(msg)
@@ -726,8 +737,8 @@ async def spty(ctx, kullanici: discord.Member = None):
 @bot.command(aliases=["soru"])
 async def quiz(ctx):
     q = random.choice(bts_sorulari)
-    view = QuizView(q["dogru"], q["siklar"], ctx.author)
-    await ctx.send(f"💜 **BTS BİLGİ SORUSU!** ✨🌸\n\n{q['soru']}\n*Cevaplamak için 15 saniyen var!*", view=view)
+    view = QuizView(q["dogru"], q["siklar"])
+    await ctx.send(f"💜 **BTS BİLGİ SORUSU!** ✨🌸\n\n{q['soru']}\n*Cevaplamak için 30 saniyeniz var! Herkes doğruyu bulana kadar deneyebilir!*", view=view)
 
 @bot.command()
 async def bts(ctx):
