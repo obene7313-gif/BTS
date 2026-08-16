@@ -1,9 +1,9 @@
 FROM python:3.10-slim
 
-# FFmpeg ve ses bağımlılıklarını sisteme kuruyoruz
+# FFmpeg ve ses kütüphanelerini yüklüyoruz
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    & rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
