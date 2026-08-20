@@ -9,7 +9,6 @@ import time
 import pytz
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Thread
-import yt_dlp
 
 # --- HARİCİ KÜTÜPHANESİZ 7/24 WEBSERVER ---
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -78,49 +77,7 @@ def save_data(data):
 
 db = load_data()
 
-# --- MÜZİK MOTORU AYARLARI (YOUTUBE ENGELİNİ AŞAN YAPILANMA) ---
-YTDL_OPTIONS = {
-    'format': 'bestaudio/best',
-    'extractaudio': True,
-    'audioformat': 'mp3',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'scsearch',  # YouTube engeline takılmamak için SoundCloud araması
-    'source_address': '0.0.0.0'
-}
-
-FFMPEG_OPTIONS = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn'
-}
-
-ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-        self.data = data
-        self.title = data.get('title')
-        self.url = data.get('url')
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=True):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-
-        if 'entries' in data:
-            data = data['entries'][0]
-
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **FFMPEG_OPTIONS), data=data)
-
-# Quiz Görünümü
+# --- SORU / QUIZ GÖRÜNÜMÜ (HATA VERMEYEN DÜZELTİLMİŞ YAPI) ---
 class QuizView(discord.ui.View):
     def __init__(self, dogru_index, options):
         super().__init__(timeout=30.0)
@@ -151,7 +108,9 @@ class QuizView(discord.ui.View):
                 db["bakiye"][uid] = db["bakiye"].get(uid, 0) + 500
                 save_data(db)
 
-                await interaction.response.edit_message(
+                # Düzeltildi: Önce defer yapıp sonra mesajı güncelliyoruz ki Discord Zaman Aşımı Hatası vermesin
+                await interaction.response.defer()
+                await interaction.message.edit(
                     content=f"🎉 **Doğru Cevap!** {interaction.user.mention} doğru şıkkı buldu ve **500 BTS Parası** kazandı! Yeni bakiye: `{db['bakiye'][uid]}` 💖✨", 
                     view=self
                 )
@@ -160,7 +119,8 @@ class QuizView(discord.ui.View):
                 clicked_button.disabled = True
                 clicked_button.style = discord.ButtonStyle.danger
                 
-                await interaction.response.edit_message(
+                await interaction.response.defer()
+                await interaction.message.edit(
                     content=f"💥 **{interaction.user.mention}** yanlış şıkka bastı! Ama yarışma devam ediyor, doğruyu bulana kadar denemeye devam edin! 🌸✨", 
                     view=self
                 )
@@ -433,7 +393,53 @@ async def amortentia(ctx, kullanici: discord.Member, miktar: int):
     save_data(db)
     await ctx.send(f"👑 **Tac Sahibi İkramı!** {kullanici.mention} hesabına **{miktar} BTS Parası** eklendi! 💜✨🌸")
 
-# ==================== EĞLENCE & ETKİLEŞİM ====================
+# ==================== EĞLENCE & OYUN MİNİ-GAMES ====================
+
+@bot.command()
+async def adamasmaca(ctx):
+    kelimeler = ["bts", "jungkook", "jimin", "suga", "rm", "jhope", "jin", "v", "amortentia", "kpop", "muzik", "discord", "magaza", "straykids", "blackpink"]
+    secilen = random.choice(kelimeler).lower()
+    tahmin_edilen = ["_"] * len(secilen)
+    kalan_hak = 6
+    kullanilan_harfler = []
+
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel and len(m.content) == 1
+
+    msg = await ctx.send(f"🎮 **Adam Asmaca Başladı!** 🌸\nWord: `{' '.join(tahmin_edilen)}` \nKalan Hak: **{kalan_hak}** ❤️\nBir harf yazın!")
+
+    while kalan_hak > 0 and "_" in tahmin_edilen:
+        try:
+            response = await bot.wait_for("message", check=check, timeout=30.0)
+            harf = response.content.lower()
+
+            if harf in kullanilan_harfler:
+                await ctx.send("🌸 Bu harfi zaten denemiştin şekerim, başka bir harf dene!", delete_after=3)
+                continue
+
+            kullanilan_harfler.append(harf)
+
+            if harf in secilen:
+                for i in range(len(secilen)):
+                    if secilen[i] == harf:
+                        tahmin_edilen[i] = harf
+                
+                await msg.edit(content=f"🎉 **Doğru Harf!** 🌸\nWord: `{' '.join(tahmin_edilen)}` \nKalan Hak: **{kalan_hak}** ❤️\nDenediğin Harfler: `{', '.join(kullanilan_harfler)}`")
+            else:
+                kalan_hak -= 1
+                await msg.edit(content=f"❌ **Yanlış Harf!** 🌸\nWord: `{' '.join(tahmin_edilen)}` \nKalan Hak: **{kalan_hak}** ❤️\nDenediğin Harfler: `{', '.join(kullanilan_harfler)}`")
+
+        except asyncio.TimeoutError:
+            await ctx.send(f"⏱️ **Süre Doldu!** Adam asmaca oyunu bitti. Doğru kelime: `{secilen}` idi 🌸")
+            return
+
+    if "_" not in tahmin_edilen:
+        uid = str(ctx.author.id)
+        db["bakiye"][uid] = db["bakiye"].get(uid, 0) + 300
+        save_data(db)
+        await ctx.send(f"🎊 **TEBRİKLER {ctx.author.mention}!** Kelimeyi bildin: `{secilen.upper()}`! Hesabına **300 BTS Parası** eklendi! 💜✨")
+    else:
+        await ctx.send(f"🥀 **Kaybettin!** Adam asıldı... Doğru kelime `{secilen.upper()}` idi. Şansını tekrar dene! 🌸")
 
 @bot.command()
 async def kacsm(ctx, kullanici: discord.Member = None):
@@ -671,96 +677,6 @@ async def rich(ctx):
             pass
     await ctx.send(embed=embed)
 
-# ==================== MÜZİK KOMUTLARI ====================
-
-@bot.command(aliases=["play", "p"])
-async def sarki(ctx, *, arama: str):
-    if not ctx.author.voice:
-        await ctx.send("❌ Şarkı açmam için önce bir ses kanalına girmelisin şekerim! 🎙️🌸")
-        return
-
-    channel = ctx.author.voice.channel
-    voice_client = ctx.voice_client
-
-    if voice_client is None:
-        voice_client = await channel.connect()
-    elif voice_client.channel != channel:
-        await voice_client.move_to(channel)
-
-    async with ctx.typing():
-        try:
-            # YouTube/Spotify yönlendirmesini SoundCloud motoruna aktarır
-            if "open.spotify.com/track" in arama:
-                arama = arama.split("track/")[1].split("?")[0]
-            
-            if not arama.startswith("http://") and not arama.startswith("https://"):
-                arama_sorgu = f"scsearch:{arama}"
-            else:
-                arama_sorgu = arama
-
-            player = await YTDLSource.from_url(arama_sorgu, loop=bot.loop, stream=True)
-            
-            if voice_client.is_playing():
-                voice_client.stop()
-
-            voice_client.play(player, after=lambda e: print(f'Müzik Bitti Hata: {e}') if e else None)
-
-            embed = discord.Embed(
-                title="🎵 Amortentia Müzik Çalar 🌸", 
-                description=f"🎶 **Şu an Çalıyor:** `{player.title}` ✨", 
-                color=discord.Color.purple()
-            )
-            await ctx.send(embed=embed)
-
-        except Exception as e:
-            await ctx.send(f"❌ Şarkı çalınırken bir hata oluştu şekerim! 💔\n`Hata: {e}`")
-
-@bot.command(aliases=["stop", "leave"])
-async def dur(ctx):
-    if ctx.voice_client:
-        await ctx.voice_client.disconnect()
-        await ctx.send("👋 Müzik kapatıldı ve ses kanalından ayrıldım! ✨🌸")
-    else:
-        await ctx.send("❌ Zaten bir ses kanalında değilim tatlım! 💖")
-
-@bot.command()
-async def spty(ctx, kullanici: discord.Member = None):
-    hedef = kullanici or ctx.author
-    
-    spotify_activity = None
-    for activity in hedef.activities:
-        if isinstance(activity, discord.Spotify):
-            spotify_activity = activity
-            break
-
-    if spotify_activity:
-        toplam_sure = spotify_activity.duration.total_seconds()
-        gecen_sure = (datetime.utcnow() - spotify_activity.created_at).total_seconds()
-        gecen_sure = min(gecen_sure, toplam_sure)
-        
-        gecen_fmt = f"{int(gecen_sure // 60):02d}:{int(gecen_sure % 60):02d}"
-        toplam_fmt = f"{int(toplam_sure // 60):02d}:{int(toplam_sure % 60):02d}"
-        
-        yuzde = gecen_sure / toplam_sure if toplam_sure > 0 else 0
-        doluluk = int(yuzde * 10)
-        progress_bar = "▬" * doluluk + "🔘" + "▬" * (10 - doluluk)
-
-        embed = discord.Embed(
-            title=f"🎧 {hedef.display_name} Spotify Dinliyor 🌸", 
-            color=discord.Color.from_rgb(30, 215, 96)
-        )
-        embed.add_field(name="🎵 Şarkı", value=f"**[{spotify_activity.title}](https://open.spotify.com/track/{spotify_activity.track_id})**", inline=False)
-        embed.add_field(name="🎤 Sanatçı", value=f"`{', '.join(spotify_activity.artists)}`", inline=True)
-        embed.add_field(name="💿 Albüm", value=f"`{spotify_activity.album}`", inline=True)
-        embed.add_field(name="⏱️ Süre", value=f"`{gecen_fmt}` {progress_bar} `{toplam_fmt}`", inline=False)
-        
-        embed.set_thumbnail(url=spotify_activity.album_cover_url)
-        embed.set_footer(text="Amortentia Müzik Sistemi ✨", icon_url=bot.user.display_avatar.url)
-        
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send(f"🌸 **{hedef.display_name}** şu an Spotify üzerinde şarkı dinlemiyor veya Discord durumunda Spotify görünmüyor! ✨")
-
 # ==================== BİLGİ & DİĞER KOMUTLAR ====================
 
 @bot.command(aliases=["soru"])
@@ -806,11 +722,11 @@ async def ping(ctx):
 
 @bot.command()
 async def yardim(ctx):
-    embed = discord.Embed(title="🌸 Amortentia Bot Komut Menüsü Ribbon", description="Tüm komutlar sevgilerle hazırlandı ✨💖", color=discord.Color.pink())
+    embed = discord.Embed(title="🌸 Amortentia Bot Komut Menüsü ✨", description="Tüm komutlar sevgilerle hazırlandı ✨💖", color=discord.Color.pink())
     embed.add_field(name="👑 Yetkili Komutları", value="`!ayarlar`, `!kufurengel`, `!reklamengel`, `!spamengel`, `!logayar`, `!hghb`, `!karaliste`, `!sil`, `!sustur`, `!ac`, `!kick`, `!ban`, `!unban`, `!nuke`, `!lock`, `!unlock`, `!rolver`, `!rolal`, `!amortentia`", inline=False)
-    embed.add_field(name="💖 Eğlence Komutları", value="`!kacsm`, `!afk`, `!ucanguvercin`, `!kiss`, `!op`, `!saril`, `!slaps`, `!efkarolcer`, `!askolcer`, `!sanslisayi`, `!ship`, `!ship2`, `!eat`, `!saat`", inline=False)
+    embed.add_field(name="💖 Eğlence Komutları", value="`!adamasmaca`, `!kacsm`, `!afk`, `!ucanguvercin`, `!kiss`, `!op`, `!saril`, `!slaps`, `!efkarolcer`, `!askolcer`, `!sanslisayi`, `!ship`, `!ship2`, `!eat`, `!saat`", inline=False)
     embed.add_field(name="💰 Ekonomi Komutları", value="`!haftalık`, `!para`, `!yazitura`, `!slots`, `!join`, `!rich`", inline=False)
-    embed.add_field(name="🎶 Müzik & Bilgi Komutları", value="`!sarki <isim/link>`, `!dur`, `!soru`, `!matematik`, `!spty`, `!bts`, `!sunucu`, `!kullanici`, `!ping`", inline=False)
+    embed.add_field(name="💜 Bilgi & Genel", value="`!soru`, `!matematik`, `!bts`, `!sunucu`, `!kullanici`, `!ping`", inline=False)
     await ctx.send(embed=embed)
 
 # TOKEN VE BAŞLATMA
